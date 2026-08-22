@@ -5,8 +5,6 @@ import lk.sonora.app.model.PlaybackState
 import lk.sonora.app.model.PlayerStatus
 import lk.sonora.app.model.Track
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TrackModelTest {
@@ -23,22 +21,22 @@ class TrackModelTest {
         )
         assertEquals("content://media/external/audio/1", localTrack.playableUrl)
 
-        val previewTrack = Track(
+        val directAudioTrack = Track(
             id = "2",
             title = "Song B",
             artist = "Artist B",
             previewUrl = "https://preview.url",
             audioUrl = "https://audio.url"
         )
-        assertEquals("https://preview.url", previewTrack.playableUrl)
+        assertEquals("https://audio.url", directAudioTrack.playableUrl)
 
-        val directTrack = Track(
+        val previewOnlyTrack = Track(
             id = "3",
             title = "Song C",
             artist = "Artist C",
-            audioUrl = "https://audio.url"
+            previewUrl = "https://preview.url"
         )
-        assertEquals("https://audio.url", directTrack.playableUrl)
+        assertEquals("https://preview.url", previewOnlyTrack.playableUrl)
     }
 
     @Test
