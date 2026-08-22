@@ -7,6 +7,9 @@ on:
     branches: [ main ]
   workflow_dispatch: {}
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -24,8 +27,16 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      # No gradlew wrapper is committed to this repo yet, so Gradle itself
+      # is installed by the runner (which has internet access, unlike the
+      # environment this repo was scaffolded in).
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Generate Gradle wrapper
+        run: gradle wrapper --gradle-version 8.7
 
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest
@@ -43,3 +54,15 @@ jobs:
           name: sonora-lk-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+      # Commit the generated wrapper back so local `./gradlew` works too,
+      # and future CI runs skip the setup-gradle/generate steps above.
+      - name: Commit generated wrapper
+        if: github.event_name == 'push'
+        run: |
+          cd ..
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add android/gradlew android/gradlew.bat android/gradle/wrapper/
+          git diff --staged --quiet || git commit -m "chore: commit generated Gradle wrapper [skip ci]"
+          git push

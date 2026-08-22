@@ -7,10 +7,13 @@ cd android
 ```
 Output: `app/build/outputs/apk/debug/app-debug.apk`
 
-**Known gap:** this skeleton does not include the Gradle wrapper binary
-(`gradlew`/`gradle-wrapper.jar`) — generate it once locally with
-`gradle wrapper --gradle-version 8.7` (requires a local Gradle install)
-and commit the result, or CI's `./gradlew` step will fail on a fresh clone.
+**Gradle wrapper:** not committed to this repo yet. CI generates it on
+first run (via `gradle/actions/setup-gradle` + `gradle wrapper`) and
+commits it back automatically, so after the first successful Actions run
+`./gradlew` will exist in the repo and work locally too. To generate it
+yourself instead: install Gradle locally and run
+`gradle wrapper --gradle-version 8.7` from `android/`, then commit
+`gradlew`, `gradlew.bat`, and `gradle/wrapper/`.
 
 ## Backend
 ```
