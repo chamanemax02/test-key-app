@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -52,6 +53,11 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 val playbackState by MusicPlayerManager.playbackState.collectAsState()
                 var isFullPlayerExpanded by remember { mutableStateOf(false) }
+
+                // Intercept Android hardware/gesture back press when Full Player is open
+                BackHandler(enabled = isFullPlayerExpanded) {
+                    isFullPlayerExpanded = false
+                }
 
                 Box(
                     modifier = Modifier

@@ -12,7 +12,6 @@ import lk.sonora.app.SonoraApplication
 import lk.sonora.app.data.remote.ApiResult
 import lk.sonora.app.model.Track
 import lk.sonora.app.player.DownloadManagerHelper
-import lk.sonora.app.player.MusicPlayerManager
 
 data class PlayerUiState(
     val isDownloading: Boolean = false,
@@ -37,15 +36,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun downloadTrack(track: Track) {
         viewModelScope.launch {
-            if (track.spotifyUrl.isBlank()) {
-                Toast.makeText(app, "Track URL not available for download", Toast.LENGTH_SHORT).show()
-                return@launch
-            }
-
             _uiState.value = _uiState.value.copy(isDownloading = true)
-            Toast.makeText(app, "Fetching 320kbps download link...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(app, "Preparing high quality download...", Toast.LENGTH_SHORT).show()
 
-            when (val result = musicRepo.getDownloadUrl(track.spotifyUrl)) {
+            when (val result = musicRepo.getDownloadUrl(track)) {
                 is ApiResult.Success -> {
                     DownloadManagerHelper.downloadTrack(app, track, result.data)
                     Toast.makeText(app, "Download started: ${track.title}", Toast.LENGTH_LONG).show()

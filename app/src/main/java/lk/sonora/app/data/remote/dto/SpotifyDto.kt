@@ -3,7 +3,93 @@ package lk.sonora.app.data.remote.dto
 import com.google.gson.annotations.SerializedName
 import lk.sonora.app.model.Track
 
-// Search Response
+// YouTube Search Response
+data class YouTubeSearchResponseDto(
+    @SerializedName("status") val status: Boolean = false,
+    @SerializedName("query") val query: String? = null,
+    @SerializedName("data") val data: List<YouTubeItemDto>? = null,
+    @SerializedName("result") val result: List<YouTubeItemDto>? = null,
+    @SerializedName("detail") val detail: String? = null
+)
+
+data class YouTubeItemDto(
+    @SerializedName("video_id") val videoId: String? = null,
+    @SerializedName("youtube_url") val youtubeUrl: String? = null,
+    @SerializedName("title") val title: String? = null,
+    @SerializedName("duration") val duration: Any? = null,
+    @SerializedName("thumbnail") val thumbnail: String? = null,
+    @SerializedName("uploader") val uploader: String? = null,
+    @SerializedName("artist") val artist: String? = null
+) {
+    fun toTrack(): Track {
+        val safeTitle = title?.trim() ?: "Unknown Title"
+        val safeArtist = (uploader ?: artist)?.trim() ?: "Unknown Artist"
+        val id = videoId ?: youtubeUrl?.substringAfterLast("v=") ?: safeTitle.hashCode().toString()
+        val yUrl = youtubeUrl ?: "https://www.youtube.com/watch?v=$id"
+
+        val durationSec: Long = when (duration) {
+            is Number -> duration.toLong()
+            is String -> {
+                if (duration.contains(":")) {
+                    parseDurationToMs(duration) / 1000
+                } else {
+                    duration.toLongOrNull() ?: 0L
+                }
+            }
+            else -> 0L
+        }
+
+        val durationText = if (durationSec > 0) {
+            val min = durationSec / 60
+            val sec = durationSec % 60
+            String.format("%d:%02d", min, sec)
+        } else "3:30"
+
+        return Track(
+            id = id,
+            title = cleanTitle(safeTitle),
+            artist = safeArtist,
+            album = "YouTube Music",
+            durationText = durationText,
+            durationMs = durationSec * 1000L,
+            artworkUrl = thumbnail ?: "https://i.ytimg.com/vi/$id/hqdefault.jpg",
+            youtubeUrl = yUrl,
+            spotifyUrl = "",
+            previewUrl = "",
+            audioUrl = "",
+            localUri = "",
+            isLocal = false
+        )
+    }
+
+    private fun cleanTitle(raw: String): String {
+        return raw.replace(Regex("(?i)\\[official.*?\\]|\\(official.*?\\)|\\(lyrics\\)|\\[lyrics\\]|\\(audio\\)|\\[audio\\]|\\(video\\)|\\[video\\]"), "")
+            .trim()
+    }
+}
+
+// YouTube Download / Audio Stream Response
+data class YouTubeDownloadResponseDto(
+    @SerializedName("status") val status: Boolean = false,
+    @SerializedName("data") val data: YouTubeDownloadDataDto? = null,
+    @SerializedName("result") val result: YouTubeDownloadDataDto? = null,
+    @SerializedName("detail") val detail: String? = null
+)
+
+data class YouTubeDownloadDataDto(
+    @SerializedName("video_id") val videoId: String? = null,
+    @SerializedName("title") val title: String? = null,
+    @SerializedName("duration") val duration: Any? = null,
+    @SerializedName("thumbnail") val thumbnail: String? = null,
+    @SerializedName("filename") val filename: String? = null,
+    @SerializedName("direct_url") val directUrl: String? = null,
+    @SerializedName("download_url") val downloadUrl: String? = null
+) {
+    val audioUrl: String?
+        get() = directUrl ?: downloadUrl
+}
+
+// Legacy Spotify Search Response
 data class SearchResponseDto(
     @SerializedName("status") val status: Boolean = false,
     @SerializedName("query") val query: String? = null,
@@ -33,6 +119,7 @@ data class SearchItemDto(
             durationText = duration ?: "0:00",
             durationMs = parseDurationToMs(duration),
             artworkUrl = thumbnail ?: "",
+            youtubeUrl = youtubeUrl ?: if (videoId != null) "https://www.youtube.com/watch?v=$videoId" else "",
             spotifyUrl = spotifyUrl ?: "",
             previewUrl = "",
             audioUrl = "",

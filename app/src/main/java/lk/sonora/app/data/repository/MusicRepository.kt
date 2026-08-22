@@ -19,62 +19,85 @@ class MusicRepository(private val db: SonoraDatabase) {
 
     suspend fun searchMusic(query: String): ApiResult<List<Track>> = withContext(Dispatchers.IO) {
         try {
-            val response = api.search(query = query, apiKey = apiKey)
-            if (response.isSuccessful && response.body()?.status == true) {
-                val items = response.body()?.result.orEmpty()
+            // First attempt YouTube Music Search for real streamable audio
+            val ytResponse = api.searchYouTube(query = query, apiKey = apiKey)
+            if (ytResponse.isSuccessful && ytResponse.body()?.status == true) {
+                val items = ytResponse.body()?.data ?: ytResponse.body()?.result.orEmpty()
                 val favoriteIds = db.favoriteDao().getAllFavoriteIds().toSet()
                 val tracks = items.map { dto ->
                     val track = dto.toTrack()
                     track.copy(isFavorite = favoriteIds.contains(track.id))
                 }
-                // Cache tracks into Room
+                if (tracks.isNotEmpty()) {
+                    db.trackDao().insertTracks(tracks.map { TrackEntity.fromTrack(it) })
+                    return@withContext ApiResult.Success(tracks)
+                }
+            }
+
+            // Fallback to Spotify Search
+            val spResponse = api.searchSpotify(query = query, apiKey = apiKey)
+            if (spResponse.isSuccessful && spResponse.body()?.status == true) {
+                val items = spResponse.body()?.result.orEmpty()
+                val favoriteIds = db.favoriteDao().getAllFavoriteIds().toSet()
+                val tracks = items.map { dto ->
+                    val track = dto.toTrack()
+                    track.copy(isFavorite = favoriteIds.contains(track.id))
+                }
                 db.trackDao().insertTracks(tracks.map { TrackEntity.fromTrack(it) })
                 ApiResult.Success(tracks)
             } else {
-                ApiResult.Error(response.body()?.detail ?: "Failed to find matching songs", response.code())
+                ApiResult.Error(ytResponse.body()?.detail ?: "Failed to find matching songs", ytResponse.code())
             }
         } catch (e: Exception) {
             ApiResult.Error(e.localizedMessage ?: "Network connection error")
         }
     }
 
-    suspend fun getTrackMetadata(spotifyUrl: String): ApiResult<Track> = withContext(Dispatchers.IO) {
+    suspend fun resolveAudioStream(track: Track): ApiResult<Track> = withContext(Dispatchers.IO) {
+        // If track already has playable direct audio or local URI, return it immediately
+        if (track.playableUrl.isNotBlank()) {
+            return@withContext ApiResult.Success(track)
+        }
+
         try {
-            val response = api.getTrackMetadata(url = spotifyUrl, apiKey = apiKey)
+            val targetUrl = track.streamTargetUrl
+            val response = api.getYouTubeAudioStream(url = targetUrl, apiKey = apiKey)
             if (response.isSuccessful && response.body()?.status == true) {
-                val detail = response.body()?.result
-                if (detail != null) {
-                    val track = detail.toTrack()
-                    val isFav = db.favoriteDao().isFavorite(track.id)
-                    val fullTrack = track.copy(isFavorite = isFav)
-                    db.trackDao().insertTrack(TrackEntity.fromTrack(fullTrack))
-                    ApiResult.Success(fullTrack)
+                val data = response.body()?.data ?: response.body()?.result
+                val directUrl = data?.audioUrl
+                if (!directUrl.isNullOrBlank()) {
+                    val updatedTrack = track.copy(
+                        audioUrl = directUrl,
+                        artworkUrl = if (track.artworkUrl.isBlank()) data.thumbnail.orEmpty() else track.artworkUrl
+                    )
+                    db.trackDao().insertTrack(TrackEntity.fromTrack(updatedTrack))
+                    ApiResult.Success(updatedTrack)
                 } else {
-                    ApiResult.Error("Track details not found")
+                    ApiResult.Error("Audio stream URL not found for this track")
                 }
             } else {
-                ApiResult.Error(response.body()?.detail ?: "Failed to load track metadata", response.code())
+                ApiResult.Error(response.body()?.detail ?: "Unable to resolve audio stream", response.code())
             }
         } catch (e: Exception) {
-            ApiResult.Error(e.localizedMessage ?: "Network error")
+            ApiResult.Error(e.localizedMessage ?: "Failed to resolve playback stream")
         }
     }
 
-    suspend fun getDownloadUrl(spotifyUrl: String, quality: String = "320kbps"): ApiResult<String> = withContext(Dispatchers.IO) {
-        try {
-            val response = api.getDownloadUrl(spotifyUrl = spotifyUrl, quality = quality, apiKey = apiKey)
-            if (response.isSuccessful && response.body()?.status == true) {
-                val dlUrl = response.body()?.result?.downloadUrl
-                if (!dlUrl.isNullOrBlank()) {
-                    ApiResult.Success(dlUrl)
+    suspend fun getDownloadUrl(track: Track): ApiResult<String> = withContext(Dispatchers.IO) {
+        if (track.audioUrl.isNotBlank()) {
+            return@withContext ApiResult.Success(track.audioUrl)
+        }
+
+        when (val streamRes = resolveAudioStream(track)) {
+            is ApiResult.Success -> {
+                if (streamRes.data.audioUrl.isNotBlank()) {
+                    ApiResult.Success(streamRes.data.audioUrl)
                 } else {
                     ApiResult.Error("Download stream unavailable for this track")
                 }
-            } else {
-                ApiResult.Error(response.body()?.detail ?: "Download not authorized", response.code())
             }
-        } catch (e: Exception) {
-            ApiResult.Error(e.localizedMessage ?: "Failed to retrieve download link")
+            is ApiResult.Error -> ApiResult.Error(streamRes.message)
+            is ApiResult.Loading -> ApiResult.Error("Resolving download...")
         }
     }
 

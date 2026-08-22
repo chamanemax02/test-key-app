@@ -4,26 +4,20 @@ const { normalizeTrack, normalizeSearch } = require('../src/utils/normalizer');
 
 test('normalizeTrack correctly normalizes raw Chama API result', () => {
   const raw = {
-    id: '7qiZfU4dY1lWllzX7mPBI3',
+    video_id: 'JGwWNGJdvx8',
     title: '  Shape of You  ',
-    artist: 'Ed Sheeran',
-    album: 'Divide',
-    duration: '3:53',
-    duration_ms: 233712,
-    release_date: '2017-03-03',
+    uploader: 'Ed Sheeran',
+    duration: 264,
     thumbnail: 'https://thumbnail.url',
-    spotify_url: 'https://open.spotify.com/track/7qiZfU4dY1lWllzX7mPBI3',
-    preview_url: 'https://preview.url',
+    youtube_url: 'https://www.youtube.com/watch?v=JGwWNGJdvx8',
   };
 
   const normalized = normalizeTrack(raw);
-  assert.strictEqual(normalized.id, '7qiZfU4dY1lWllzX7mPBI3');
+  assert.strictEqual(normalized.id, 'JGwWNGJdvx8');
   assert.strictEqual(normalized.title, 'Shape of You');
   assert.strictEqual(normalized.artist, 'Ed Sheeran');
-  assert.strictEqual(normalized.album, 'Divide');
-  assert.strictEqual(normalized.duration, '3:53');
-  assert.strictEqual(normalized.durationMs, 233712);
-  assert.strictEqual(normalized.releaseDate, '2017-03-03');
+  assert.strictEqual(normalized.duration, '4:24');
+  assert.strictEqual(normalized.durationMs, 264000);
   assert.strictEqual(normalized.downloadAllowed, true);
 });
 

@@ -21,7 +21,7 @@ android {
         }
 
         // Build config fields for API defaults
-        buildConfigField("String", "DEFAULT_API_BASE_URL", "\"https://chama-movie-api.koyeb.app/api/v1/spotify/\"")
+        buildConfigField("String", "DEFAULT_API_BASE_URL", "\"https://chama-movie-api.koyeb.app/api/v1/\"")
         buildConfigField("String", "DEFAULT_API_KEY", "\"chama_api_7f4ac9c10c749bcedbd4437a066009a2\"")
     }
 

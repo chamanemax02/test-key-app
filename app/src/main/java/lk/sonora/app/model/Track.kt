@@ -8,6 +8,7 @@ data class Track(
     val durationText: String = "0:00",
     val durationMs: Long = 0L,
     val artworkUrl: String = "",
+    val youtubeUrl: String = "",
     val spotifyUrl: String = "",
     val previewUrl: String = "",
     val audioUrl: String = "",
@@ -27,8 +28,15 @@ data class Track(
     val playableUrl: String
         get() = when {
             localUri.isNotBlank() -> localUri
-            previewUrl.isNotBlank() -> previewUrl
             audioUrl.isNotBlank() -> audioUrl
+            previewUrl.isNotBlank() -> previewUrl
             else -> ""
+        }
+
+    val streamTargetUrl: String
+        get() = when {
+            youtubeUrl.isNotBlank() -> youtubeUrl
+            spotifyUrl.isNotBlank() -> spotifyUrl
+            else -> "https://www.youtube.com/watch?v=$id"
         }
 }

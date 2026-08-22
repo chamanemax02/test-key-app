@@ -20,6 +20,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import lk.sonora.app.SonoraApplication
+import lk.sonora.app.data.remote.ApiResult
 import lk.sonora.app.model.PlaybackState
 import lk.sonora.app.model.PlayerStatus
 import lk.sonora.app.model.RepeatMode
@@ -31,6 +33,7 @@ object MusicPlayerManager {
     private var appContext: Context? = null
     private val scope = CoroutineScope(Dispatchers.Main + Job())
     private var positionJob: Job? = null
+    private var resolveJob: Job? = null
 
     private val _playbackState = MutableStateFlow(PlaybackState())
     val playbackState: StateFlow<PlaybackState> = _playbackState.asStateFlow()
@@ -131,7 +134,67 @@ object MusicPlayerManager {
             }
         }
 
-        playCurrentTrack(track)
+        prepareAndPlayTrack(track)
+    }
+
+    private fun prepareAndPlayTrack(track: Track) {
+        // If streamable URL is already present, play directly
+        if (track.playableUrl.isNotBlank()) {
+            playCurrentTrack(track)
+            recordHistory(track)
+            return
+        }
+
+        // Show Buffering State while resolving stream URL
+        _playbackState.update {
+            it.copy(
+                currentTrack = track,
+                status = PlayerStatus.BUFFERING,
+                currentPositionMs = 0L,
+                errorMessage = null
+            )
+        }
+
+        resolveJob?.cancel()
+        resolveJob = scope.launch(Dispatchers.IO) {
+            val app = appContext as? SonoraApplication
+            val repo = app?.musicRepository
+            if (repo != null) {
+                when (val result = repo.resolveAudioStream(track)) {
+                    is ApiResult.Success -> {
+                        val updatedTrack = result.data
+                        // Update in queue
+                        val q = _queue.value.toMutableList()
+                        val idx = q.indexOfFirst { it.id == track.id }
+                        if (idx != -1) {
+                            q[idx] = updatedTrack
+                            _queue.value = q
+                        }
+
+                        launch(Dispatchers.Main) {
+                            playCurrentTrack(updatedTrack)
+                            recordHistory(updatedTrack)
+                        }
+                    }
+                    is ApiResult.Error -> {
+                        _playbackState.update {
+                            it.copy(
+                                status = PlayerStatus.ERROR,
+                                errorMessage = result.message
+                            )
+                        }
+                    }
+                    is ApiResult.Loading -> {}
+                }
+            }
+        }
+    }
+
+    private fun recordHistory(track: Track) {
+        scope.launch(Dispatchers.IO) {
+            val app = appContext as? SonoraApplication
+            app?.musicRepository?.recordRecentlyPlayed(track)
+        }
     }
 
     @OptIn(UnstableApi::class)
@@ -170,7 +233,7 @@ object MusicPlayerManager {
         _playbackState.update {
             it.copy(
                 currentTrack = track,
-                status = PlayerStatus.BUFFERING,
+                status = PlayerStatus.PLAYING,
                 currentPositionMs = 0L,
                 durationMs = track.durationMs,
                 errorMessage = null
@@ -185,7 +248,7 @@ object MusicPlayerManager {
         } else {
             if (player.playbackState == Player.STATE_IDLE || player.playbackState == Player.STATE_ENDED) {
                 val curr = _playbackState.value.currentTrack
-                if (curr != null) playCurrentTrack(curr)
+                if (curr != null) prepareAndPlayTrack(curr)
             } else {
                 player.play()
             }
@@ -207,7 +270,7 @@ object MusicPlayerManager {
             currentIndex = (currentIndex + 1) % q.size
         }
         val nextTrack = q[currentIndex]
-        playCurrentTrack(nextTrack)
+        prepareAndPlayTrack(nextTrack)
     }
 
     fun skipPrevious() {
@@ -222,7 +285,7 @@ object MusicPlayerManager {
 
         currentIndex = if (currentIndex - 1 < 0) q.size - 1 else currentIndex - 1
         val prevTrack = q[currentIndex]
-        playCurrentTrack(prevTrack)
+        prepareAndPlayTrack(prevTrack)
     }
 
     fun toggleShuffle() {
@@ -242,7 +305,7 @@ object MusicPlayerManager {
         when (_playbackState.value.repeatMode) {
             RepeatMode.ONE -> {
                 val current = _playbackState.value.currentTrack
-                if (current != null) playCurrentTrack(current)
+                if (current != null) prepareAndPlayTrack(current)
             }
             RepeatMode.ALL -> skipNext()
             RepeatMode.OFF -> {
