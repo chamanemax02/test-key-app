@@ -1,38 +1,32 @@
-# Architecture
+# Architecture Overview — SONORA LK
+
+## 1. High-Level Architecture
+
+SONORA LK is structured following Google's modern Android Clean Architecture and MVVM (Model-View-ViewModel) pattern, with Jetpack Compose as the modern reactive UI framework.
 
 ```
-Android App (Kotlin, Jetpack Compose, Media3, Room)
-        │
-        ▼
-Backend Proxy (Node/Express) — holds CHAMA_API_KEY
-        │
-        ▼
-Third-party metadata API (chama-movie-api)
+UI Layer (Jetpack Compose Screens & Components)
+   │
+   ▼
+ViewModel Layer (HomeViewModel, SearchViewModel, PlayerViewModel, LibraryViewModel)
+   │
+   ▼
+Repository Layer (MusicRepository, LocalMusicRepository, PlaylistRepository)
+   │
+   ├────────► Local Data Source (Room Database: SQLite)
+   │
+   ├────────► System Media Store (MediaStore Audio Scanner)
+   │
+   └────────► Remote Data Source (Retrofit API Service / Backend Proxy)
 ```
 
-## Layers (Android)
-- **ui/** — Compose screens (Home, Search, Player, Library, Settings)
-- **data/model/** — internal stable models (TrackModel, ArtistModel, ...)
-- **data/remote/** — Retrofit service + DTOs + `ApiMapper` (the only place
-  raw API responses become app models, and the only place that decides
-  whether audio is safe to expose)
-- **data/local/** — Room database: favorites, recently played, playlists,
-  local track index, cached metadata for offline fallback
-- **data/repository/** — `MusicRepository`, single source of truth for screens
-- **player/** — `PlaybackService` (Media3 `MediaSessionService`, drives
-  notification/lock-screen/Bluetooth controls) + `PlaybackRepository`
-  (app-wide observable playback state)
-- **theme/** — centralized design tokens (colors, typography, spacing,
-  shapes, animation durations) — no hard-coded values in screens
+## 2. Audio Playback Subsystem
 
-## Data flow
-Search/track requests go App → Backend Proxy → Upstream API → Proxy
-(normalizes + strips unsafe fields) → App. The app never talks to the
-upstream API directly and never holds its key.
+- **Jetpack Media3 ExoPlayer**: Handles audio streaming, local file playback, and buffer management.
+- **SonoraMediaService**: Extends `MediaSessionService`, keeping audio playback alive in the background with persistent notification controls (Android Lock Screen, Bluetooth, Notification bar).
+- **MusicPlayerManager**: Singleton state manager exposing `playbackState` as a Kotlin `StateFlow`.
 
-## Licensing gate
-`ApiMapper` (client) and `normalizeTrack` (backend) both enforce: a track
-only carries a full `audioUrl` / `downloadAllowed = true` when its
-`licenseStatus` is `LICENSED` or `USER_OWNED`. Spotify-sourced catalog
-tracks are always `PREVIEW_ONLY` — metadata, artwork, and short preview
-clips only.
+## 3. Storage & Caching Layer
+
+- **Room Database (`sonora_lk.db`)**: Stores favorites, user playlists, recently played tracks (max 100 entries), queue state, and cached track metadata.
+- **MediaStore Scanner**: Directly reads and indexes device-stored `.mp3`, `.m4a`, `.flac`, and `.wav` files with zero network dependency.

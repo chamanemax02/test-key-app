@@ -1,13 +1,14 @@
-# Security
+# Security Guide — SONORA LK
 
-- The upstream API key (`CHAMA_API_KEY`) lives only in the backend's
-  environment (`.env`, or the hosting platform's secret store). It is never
-  referenced in Android source, `BuildConfig`, resources, or the compiled APK.
-- The Android app's only configured endpoint is our own backend
-  (`BuildConfig.API_BASE_URL`); there is no code path that calls the
-  upstream provider directly.
-- Backend applies `helmet` (secure headers), CORS, and per-IP rate limiting
-  in front of the upstream call.
-- No DRM bypass, stream-ripping, or full-track extraction logic exists
-  anywhere in this codebase — enforced redundantly at both the backend
-  normalizer and the client-side `ApiMapper`.
+## 1. Secret & Key Management
+- Sensitive keys are never committed directly to public source control.
+- In production, keys should be supplied via environment variables (`CHAMA_API_KEY`) or CI secrets (`secrets.ANDROID_KEYSTORE_BASE64`).
+- `.env` and local keystores are excluded in `.gitignore`.
+
+## 2. Network Security
+- HTTPS is strictly enforced for remote traffic.
+- Requests to the proxy server are guarded by Helmet and IP rate-limiting (Express Rate Limit).
+
+## 3. Storage Safety
+- Audio files are stored cleanly under standard `Environment.DIRECTORY_MUSIC/SONORA LK/`.
+- Sanitized filenames prevent directory traversal or accidental overwrites.

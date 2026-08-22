@@ -1,31 +1,73 @@
-# SONORA LK
+# 🎵 SONORA LK — Premium Music Discovery & Audio Player
 
-Premium, Spotify-inspired music discovery + personal/local music player for Android.
-Original branding and UI — not a Spotify clone.
+<div align="center">
+  <h3>ඔබේ සංගීතය. ඔබේ මොහොත.</h3>
+  <p><i>Your Music. Your Moment.</i></p>
+</div>
 
-## Status: project skeleton
-This is Phase 1–4 scaffolding across every architectural layer (per the
-90-section spec), built as real, compilable-shaped Kotlin/Compose + Node
-source — not a mockup. It is **not** a finished, tested, CI-green app yet.
+---
 
-## What's here
-- `android/` — Kotlin + Jetpack Compose app: theme system, navigation,
-  Home/Search/Player screens, Room database (favorites, playlists, recently
-  played, local music), Media3 background-playback service, Retrofit API
-  layer with a null-safe mapper and a hard license gate.
-- `backend/` — Express proxy that holds the upstream API key server-side
-  and normalizes responses before they reach the app.
-- `.github/workflows/android-build.yml` — CI: test → build debug APK → upload artifact.
-- `docs/` — architecture, api, build, security, github-actions, legal.
+## 🌟 Features
 
-## What's not done yet (see docs/build.md)
-- Gradle wrapper binary isn't committed — generate once with `gradle wrapper`.
-- Library, Settings, Track/Artist/Album detail, Downloads, About screens are
-  stubbed as navigation routes but not yet built out.
-- Local file import (MediaStore scan) and the download manager are not implemented.
-- Nothing has been compiled/run in this environment — no Android SDK or
-  network access here, so CI hasn't actually been executed yet.
+- 🎧 **Music Discovery & Search**: Fast search with 400ms debounce, category filtering (Tracks, Artists, Albums), and persistent history.
+- 🎨 **Modern Glassmorphic Dark UI**: Custom-built with Jetpack Compose & Material 3, dynamic time-based greetings, and neon purple/pink/blue gradient styling.
+- 🔊 **Jetpack Media3 Audio Engine**: Powered by ExoPlayer & `MediaSessionService` for seamless background playback, notification bar controls, and lock-screen media integration.
+- 🎚 **Mini-Player & Full Screen Player**: Interactive floating mini-player with swipe-to-skip gestures and expandable full-screen player with seekbar and animated waveform visualizer.
+- 📂 **Local Device Music Player**: Automatic scanner for local MP3, M4A, FLAC, and WAV files with offline playback.
+- 💾 **Room Local Database**: Persistent offline storage for Favorites, Custom Playlists, and Recently Played history.
+- 🇱🇰 **Bilingual Support**: Native Sinhala (`si`) and English (`en`) localization.
+- 🚀 **Automated CI/CD**: GitHub Actions workflow generates downloadable debug APK (`app-debug.apk`) on every push.
 
-## Legal
-See `docs/legal.md`. Full Spotify catalog audio is never streamed,
-downloaded, or extracted — only metadata, artwork, and short previews.
+---
+
+## 🏗 Architecture
+
+```
+SONORA LK (Android Client)
+  ├── UI: Jetpack Compose + Material 3
+  ├── Architecture: MVVM + Clean Architecture (Kotlin Coroutines & Flow)
+  ├── Audio Engine: AndroidX Media3 (ExoPlayer + MediaSessionService)
+  ├── Database: AndroidX Room (SQLite)
+  ├── Networking: Retrofit 2 + OkHttp 3 + Gson
+  └── Image Caching: Coil Compose
+```
+
+---
+
+## 🛠 Quick Start & Build
+
+### 1. Build Android APK
+```bash
+# Build Debug APK
+./gradlew assembleDebug
+
+# Run Unit Tests
+./gradlew testDebugUnitTest
+```
+The compiled APK will be located at:
+`app/build/outputs/apk/debug/app-debug.apk`
+
+### 2. Run Backend Proxy (Optional)
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+---
+
+## 📄 Documentation
+
+- [Architecture Overview](docs/architecture.md)
+- [API Specification](docs/api.md)
+- [Build Instructions](docs/build.md)
+- [Security Guidelines](docs/security.md)
+- [GitHub Actions Workflow](docs/github-actions.md)
+- [Legal Disclaimer](docs/legal.md)
+
+---
+
+## ⚖️ License & Disclaimer
+
+This project is licensed under the [MIT License](LICENSE).  
+SONORA LK is an independent music player and is not affiliated with or endorsed by Spotify AB.

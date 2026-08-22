@@ -1,0 +1,43 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="256dp"
+    android:height="256dp"
+    android:viewportWidth="256"
+    android:viewportHeight="256">
+
+    <!-- Dark Gradient Background -->
+    <path
+        android:pathData="M0,0h256v256h-256z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="0"
+                android:startY="0"
+                android:endX="256"
+                android:endY="256"
+                android:type="linear">
+                <item android:color="#1A102F" android:offset="0.0" />
+                <item android:color="#0F0C20" android:offset="0.5" />
+                <item android:color="#080808" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Center Waveform Icon -->
+    <path
+        android:pathData="M56,128 L56,128 M74,104 L74,152 M92,84 L92,172 M110,64 L110,192 M128,48 L128,208 M146,64 L146,192 M164,84 L164,172 M182,104 L182,152 M200,128 L200,128"
+        android:strokeWidth="8"
+        android:strokeLineCap="round">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="56"
+                android:startY="128"
+                android:endX="200"
+                android:endY="128"
+                android:type="linear">
+                <item android:color="#8B5CF6" android:offset="0.0" />
+                <item android:color="#EC4899" android:offset="0.5" />
+                <item android:color="#3B82F6" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>

@@ -1,26 +1,39 @@
-# API
+# API Documentation — SONORA LK
 
-## Backend proxy endpoints (what the Android app calls)
-- `GET /v1/search?q={query}` → `{ tracks[], artists[], albums[] }`
-- `GET /v1/track?id={id}` → single normalized track
+## 1. Endpoints
 
-## Environment variables (backend, never on-device)
-| Var | Purpose |
-|---|---|
-| `CHAMA_API_KEY` | Upstream provider credential |
-| `API_BASE_URL` | Upstream base URL |
-| `API_TIMEOUT` | ms before aborting an upstream call |
-| `API_RATE_LIMIT` | requests/min the proxy accepts from clients |
-| `API_CACHE_DURATION` | seconds a response is cached in-memory |
+### 1.1 Search Music
+- **Endpoint**: `GET /api/v1/spotify/search` (or `/api/search` via proxy)
+- **Parameters**:
+  - `q` (string, required): Song title or artist name.
+  - `api_key` (string, required): API access key.
+- **Sample Response**:
+```json
+{
+  "status": true,
+  "query": "Shape of You",
+  "result": [
+    {
+      "title": "Ed Sheeran - Shape of You",
+      "artist": "Ed Sheeran",
+      "duration": "3:53",
+      "thumbnail": "https://...",
+      "spotify_url": "https://open.spotify.com/track/7qiZfU4dY1lWllzX7mPBI3",
+      "video_id": "liTfD88dbCo"
+    }
+  ]
+}
+```
 
-## Response normalization
-Upstream field names are not guaranteed stable. `routes/spotify.js`
-normalizes with null-safe fallbacks (`raw.title ?? raw.name ?? null`, etc.)
-before anything reaches the app, and the app's `ApiMapper` re-validates on
-the client side as a second null-safety layer.
+### 1.2 Track Details
+- **Endpoint**: `GET /api/v1/spotify/track` (or `/api/track` via proxy)
+- **Parameters**:
+  - `url` (string, required): Spotify track URL.
+  - `api_key` (string, required): API access key.
 
-## Scope limits
-- Full-length Spotify audio is never forwarded, downloaded, or cached —
-  only `preview_url` (upstream-provided short preview) passes through.
-- `downloadAllowed` is hard-set `false` for anything not explicitly
-  licensed/user-owned; the client also independently enforces this.
+### 1.3 320kbps Audio Download
+- **Endpoint**: `GET /api/v1/spotify/download` (or `/api/download` via proxy)
+- **Parameters**:
+  - `q` (string, required): Spotify track URL.
+  - `quality` (string, optional, default: `320kbps`)
+  - `api_key` (string, required): API access key.

@@ -1,28 +1,28 @@
-# Build
+# Build & Run Guide — SONORA LK
 
-## Android
-```
-cd android
+## Prerequisites
+- **JDK 17 or 21**
+- **Android SDK (API 34)**
+- **Node.js v18+** (for proxy server, optional)
+
+## 1. Building the Android App
+
+### Debug APK Build:
+```bash
 ./gradlew assembleDebug
 ```
-Output: `app/build/outputs/apk/debug/app-debug.apk`
+Output APK location:
+`app/build/outputs/apk/debug/app-debug.apk`
 
-**Gradle wrapper:** not committed to this repo yet. CI generates it on
-first run (via `gradle/actions/setup-gradle` + `gradle wrapper`) and
-commits it back automatically, so after the first successful Actions run
-`./gradlew` will exist in the repo and work locally too. To generate it
-yourself instead: install Gradle locally and run
-`gradle wrapper --gradle-version 8.7` from `android/`, then commit
-`gradlew`, `gradlew.bat`, and `gradle/wrapper/`.
-
-## Backend
+### Running Unit Tests:
+```bash
+./gradlew testDebugUnitTest
 ```
+
+## 2. Running the Node.js Proxy (Optional)
+```bash
 cd backend
-cp .env.example .env   # fill in CHAMA_API_KEY
 npm install
-npm start
+npm run start
 ```
-
-## CI
-`.github/workflows/android-build.yml` runs unit tests, builds the debug
-APK, and uploads it as a workflow artifact on every push/PR to `main`.
+Default proxy runs on `http://localhost:3000`.

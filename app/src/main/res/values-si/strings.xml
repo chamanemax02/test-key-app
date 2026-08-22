@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SONORA LK</string>
+    <string name="app_tagline">ඔබේ සංගීතය. ඔබේ මොහොත.</string>
+    <string name="notification_channel_name">SONORA සංගීත වාදකය</string>
+    <string name="notification_channel_desc">ගීත වාදනය සහ playback පාලනය</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">මුල් පිටුව</string>
+    <string name="nav_search">සොයන්න</string>
+    <string name="nav_library">පුස්තකාලය</string>
+    <string name="nav_downloads">බාගැනීම්</string>
+    <string name="nav_settings">සැකසුම්</string>
+
+    <!-- Greetings -->
+    <string name="greeting_morning">සුබ උදෑසනක්</string>
+    <string name="greeting_afternoon">සුබ දහවලක්</string>
+    <string name="greeting_evening">සුබ සන්ධ්‍යාවක්</string>
+
+    <!-- Home Sections -->
+    <string name="home_search_placeholder">ගීතයක්, artist කෙනෙක් හෝ album එකක් සොයන්න...</string>
+    <string name="home_recently_played">මෑතකදී ඇසූ ගීත</string>
+    <string name="home_made_for_you">ඔබ වෙනුවෙන්මයි</string>
+    <string name="home_trending">දැන් ජනප්‍රිය ගීත</string>
+    <string name="home_popular_artists">ජනප්‍රිය ගායක ගායිකාවන්</string>
+    <string name="home_your_playlists">ඔබේ Playlists</string>
+    <string name="home_local_music">Device එකේ ගීත</string>
+    <string name="home_recommended">නිර්දේශිත ගීත</string>
+
+    <!-- Search Screen -->
+    <string name="search_hint">ගීතයේ නම හෝ ගායකයාගේ නම ලියන්න...</string>
+    <string name="search_tab_all">සියල්ල</string>
+    <string name="search_tab_tracks">ගීත</string>
+    <string name="search_tab_artists">ගායකයින්</string>
+    <string name="search_tab_albums">Albums</string>
+    <string name="search_recent_searches">මෑතකදී සෙවූ දෑ</string>
+    <string name="search_clear_history">ඉතිහාසය මකන්න</string>
+    <string name="search_no_results">ඔබ සෙවූ ගීතය හමු නොවීය.</string>
+    <string name="search_empty_prompt">ඔබ කැමති ගීත සොයා රසවිඳින්න.</string>
+
+    <!-- Player Controls & Sheet -->
+    <string name="player_now_playing">දැන් වාදනය වන්නේ</string>
+    <string name="player_up_next">මීළඟ ගීතය</string>
+    <string name="player_queue">ගීත පෝලිම (Queue)</string>
+    <string name="player_shuffle">අහඹු වාදනය</string>
+    <string name="player_repeat">නැවත වාදනය</string>
+    <string name="player_favorite">ප්‍රියතම (Favorite)</string>
+    <string name="player_share">ගීතය Share කරන්න</string>
+    <string name="player_open_spotify">Spotify හි විවෘත කරන්න</string>
+    <string name="player_add_to_playlist">Playlist එකට එක් කරන්න</string>
+    <string name="player_download_track">Audio එක Download කරන්න</string>
+    <string name="player_download_not_allowed">මෙම audio එක download කිරීම සඳහා අවසර නොමැත.</string>
+
+    <!-- Library Screen -->
+    <string name="library_title">ඔබේ සංගීත පුස්තකාලය</string>
+    <string name="library_tab_all">සමස්තය</string>
+    <string name="library_tab_favorites">ප්‍රියතම ගීත</string>
+    <string name="library_tab_playlists">Playlists</string>
+    <string name="library_tab_local">Local Music</string>
+    <string name="library_create_playlist">නව Playlist එකක් සාදන්න</string>
+    <string name="library_playlist_name">Playlist නම</string>
+    <string name="library_playlist_create">සාදන්න</string>
+    <string name="library_playlist_cancel">අවලංගු කරන්න</string>
+    <string name="library_empty_favorites">ඔබ තවමත් ගීතයක් Favorite කරලා නැහැ.</string>
+    <string name="library_empty_playlists">ඔබේ පළමු playlist එක නිර්මාණය කරන්න.</string>
+    <string name="library_empty_local">ඔබේ device එකේ audio files හමු නොවීය.</string>
+    <string name="library_scan_device">Device Music Scan කරන්න</string>
+
+    <!-- Downloads Screen -->
+    <string name="downloads_title">බාගැනීම්</string>
+    <string name="downloads_empty">Download කළ audio මෙහි පෙන්වනු ඇත.</string>
+    <string name="downloads_downloading">බාගත වෙමින් පවතී…</string>
+    <string name="downloads_completed">සම්පූර්ණයි</string>
+    <string name="downloads_failed">බාගත කිරීම අසාර්ථකයි</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">සැකසුම්</string>
+    <string name="settings_appearance">පෙනුම</string>
+    <string name="settings_theme">තේමාව (Theme)</string>
+    <string name="settings_theme_dark">Dark Mode (පෙරනිමි)</string>
+    <string name="settings_theme_light">Light Mode</string>
+    <string name="settings_theme_system">System Default</string>
+    <string name="settings_audio_quality">ශබ්ද තත්ත්වය (Audio Quality)</string>
+    <string name="settings_quality_high">High (320 kbps)</string>
+    <string name="settings_quality_standard">Standard (160 kbps)</string>
+    <string name="settings_api_config">API Endpoint</string>
+    <string name="settings_clear_cache">Cache දත්ත මකන්න</string>
+    <string name="settings_clear_cache_desc">තාවකාලික Artwork සහ Search දත්ත ඉවත් කරන්න</string>
+    <string name="settings_reset_data">සියලු දත්ත Reset කරන්න</string>
+    <string name="settings_reset_data_confirm">ඔබේ ප්‍රියතම ගීත සහ playlists සියල්ල මකා දැමීමට ඔබට විශ්වාසද?</string>
+    <string name="settings_about">SONORA LK ගැන</string>
+    <string name="settings_version">Version 1.0.0 (Production Build)</string>
+    <string name="settings_developer">ශ්‍රී ලාංකීය සංගීත ලෝලීන් වෙනුවෙන් නිර්මාණය විය</string>
+    <string name="settings_privacy">පෞද්ගලිකත්ව ප්‍රතිපත්තිය</string>
+    <string name="settings_disclaimer_title">නීතිමය ප්‍රකාශය</string>
+    <string name="settings_disclaimer_content">SONORA LK යනු ස්වාධීන සංගීත වාදන යෙදුමකි. එය Spotify ආයතනය හා සම්බන්ධ නොවේ. Spotify සහ ඒ ආශ්‍රිත සියලු වෙළඳ ලකුණු Spotify AB සමාගම සතුය.</string>
+
+    <!-- Actions & Common -->
+    <string name="action_retry">නැවත උත්සාහ කරන්න</string>
+    <string name="action_close">වසන්න</string>
+    <string name="action_delete">මකන්න</string>
+    <string name="action_confirm">තහවුරු කරන්න</string>
+    <string name="error_generic">සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.</string>
+    <string name="error_network">අන්තර්ජාල සම්බන්ධතාවය නොමැත. Offline ආකාරයට මාරු විය.</string>
+    <string name="offline_mode_banner">Offline Mode — ඔබගේ Local ගීත පමණක් වාදනය වේ</string>
+    <string name="permission_audio_desc">ඔබේ දුරකතනයේ ඇති MP3, M4A, FLAC, WAV ගීත වාදනය කිරීමට ගබඩා අවසරය ලබාදෙන්න.</string>
+    <string name="permission_grant">අවසර ලබාදෙන්න</string>
+</resources>

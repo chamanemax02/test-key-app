@@ -1,9 +1,0 @@
-<resources>
-    <string name="app_name">SONORA LK</string>
-    <string name="search_placeholder">ගීතයක්, artist කෙනෙක් හෝ album එකක් සොයන්න...</string>
-    <string name="no_results">ඔබ සෙවූ ගීතය හමු නොවීය.</string>
-    <string name="retry">නැවත උත්සාහ කරන්න</string>
-    <string name="preview_only_notice">Preview only — full track on Spotify</string>
-    <string name="legal_disclaimer">SONORA LK is an independent music application and is not affiliated with Spotify.</string>
-    <string name="spotify_trademark_notice">Spotify and related trademarks belong to their respective owners.</string>
-</resources>

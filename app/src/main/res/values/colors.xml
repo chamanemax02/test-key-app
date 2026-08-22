@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Backgrounds -->
+    <color name="bg_primary">#080808</color>
+    <color name="bg_secondary">#111111</color>
+    <color name="bg_card">#181818</color>
+    <color name="bg_card_elevated">#222222</color>
+
+    <!-- Accents (Purple -> Pink -> Blue) -->
+    <color name="accent_purple">#8B5CF6</color>
+    <color name="accent_pink">#EC4899</color>
+    <color name="accent_blue">#3B82F6</color>
+    <color name="accent_cyan">#06B6D4</color>
+
+    <!-- Text -->
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#A7A7A7</color>
+    <color name="text_muted">#666666</color>
+
+    <!-- Indicators -->
+    <color name="color_favorite">#F43F5E</color>
+    <color name="color_success">#10B981</color>
+    <color name="color_error">#EF4444</color>
+    <color name="color_warning">#F59E0B</color>
+</resources>
