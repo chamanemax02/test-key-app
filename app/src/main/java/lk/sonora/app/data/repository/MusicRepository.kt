@@ -64,7 +64,7 @@ class MusicRepository(private val db: SonoraDatabase) {
         try {
             val response = api.getDownloadUrl(spotifyUrl = spotifyUrl, quality = quality, apiKey = apiKey)
             if (response.isSuccessful && response.body()?.status == true) {
-                val dlUrl = response.body()?.result?.download_url
+                val dlUrl = response.body()?.result?.downloadUrl
                 if (!dlUrl.isNullOrBlank()) {
                     ApiResult.Success(dlUrl)
                 } else {
