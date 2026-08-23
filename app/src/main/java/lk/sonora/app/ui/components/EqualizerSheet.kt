@@ -113,8 +113,8 @@ fun EqualizerSheet(
                         checked = soundState.isEnabled,
                         onCheckedChange = { SoundEffectManager.toggleEnabled(it) },
                         colors = SwitchDefaults.colors(
-                            checkedThumbColor = TextPrimary,
-                            checkedTrackColor = AccentPurple,
+                            checkedThumbColor = androidx.compose.ui.graphics.Color.Black,
+                            checkedTrackColor = SpotifyGreen,
                             uncheckedThumbColor = TextMuted,
                             uncheckedTrackColor = BgCardElevated
                         )
@@ -148,7 +148,7 @@ fun EqualizerSheet(
             ) {
                 soundState.availablePresets.forEach { preset ->
                     val isSelected = soundState.currentPreset == preset
-                    val bgModifier = if (isSelected) Modifier.background(SonoraGradient) else Modifier.background(BgCardElevated)
+                    val bgModifier = if (isSelected) Modifier.background(SpotifyGreen) else Modifier.background(BgCardElevated)
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(20.dp))
@@ -162,7 +162,7 @@ fun EqualizerSheet(
                             text = preset,
                             fontSize = 12.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSelected) TextPrimary else TextSecondary
+                            color = if (isSelected) androidx.compose.ui.graphics.Color.Black else TextSecondary
                         )
                     }
                 }
@@ -194,7 +194,7 @@ fun EqualizerSheet(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(text = freqLabel, fontSize = 12.sp, color = TextPrimary)
-                        Text(text = "${if (dB > 0) "+$dB" else "$dB"} dB", fontSize = 12.sp, color = AccentPink)
+                        Text(text = "${if (dB > 0) "+$dB" else "$dB"} dB", fontSize = 12.sp, color = SpotifyGreen)
                     }
                     Slider(
                         value = current,
@@ -204,8 +204,8 @@ fun EqualizerSheet(
                         valueRange = min..max,
                         enabled = soundState.isEnabled,
                         colors = SliderDefaults.colors(
-                            thumbColor = AccentPurple,
-                            activeTrackColor = AccentPurple,
+                            thumbColor = TextPrimary,
+                            activeTrackColor = SpotifyGreen,
                             inactiveTrackColor = Color(0x22FFFFFF)
                         )
                     )
@@ -229,7 +229,7 @@ fun EqualizerSheet(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(text = "🔥 Deep Bass Booster", fontSize = 13.sp, color = TextPrimary, fontWeight = FontWeight.Medium)
-                    Text(text = "${(soundState.bassBoostStrength / 10)}%", fontSize = 12.sp, color = AccentPink)
+                    Text(text = "${(soundState.bassBoostStrength / 10)}%", fontSize = 12.sp, color = SpotifyGreen)
                 }
                 Slider(
                     value = soundState.bassBoostStrength.toFloat(),
@@ -237,8 +237,8 @@ fun EqualizerSheet(
                     valueRange = 0f..1000f,
                     enabled = soundState.isEnabled,
                     colors = SliderDefaults.colors(
-                        thumbColor = AccentPink,
-                        activeTrackColor = AccentPink,
+                        thumbColor = TextPrimary,
+                        activeTrackColor = SpotifyGreen,
                         inactiveTrackColor = Color(0x22FFFFFF)
                     )
                 )
@@ -253,7 +253,7 @@ fun EqualizerSheet(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(text = "🎧 3D Surround Sound (Virtualizer)", fontSize = 13.sp, color = TextPrimary, fontWeight = FontWeight.Medium)
-                    Text(text = "${(soundState.virtualizerStrength / 10)}%", fontSize = 12.sp, color = AccentPurple)
+                    Text(text = "${(soundState.virtualizerStrength / 10)}%", fontSize = 12.sp, color = SpotifyGreen)
                 }
                 Slider(
                     value = soundState.virtualizerStrength.toFloat(),
@@ -261,8 +261,8 @@ fun EqualizerSheet(
                     valueRange = 0f..1000f,
                     enabled = soundState.isEnabled,
                     colors = SliderDefaults.colors(
-                        thumbColor = AccentPurple,
-                        activeTrackColor = AccentPurple,
+                        thumbColor = TextPrimary,
+                        activeTrackColor = SpotifyGreen,
                         inactiveTrackColor = Color(0x22FFFFFF)
                     )
                 )

@@ -118,8 +118,8 @@ fun FullPlayerScreen(
             .background(
                 Brush.verticalGradient(
                     listOf(
-                        Color(0xFF28103A),
-                        Color(0xFF130924),
+                        Color(0xFF1A261C),
+                        Color(0xFF121813),
                         BgPrimary
                     )
                 )
@@ -172,7 +172,7 @@ fun FullPlayerScreen(
                         Icon(
                             imageVector = Icons.Default.GraphicEq,
                             contentDescription = "Equalizer & Sound Effects",
-                            tint = if (isEqualizerVisible) AccentPink else TextPrimary,
+                            tint = if (isEqualizerVisible) SpotifyGreen else TextPrimary,
                             modifier = Modifier.size(26.dp)
                         )
                     }
@@ -182,22 +182,22 @@ fun FullPlayerScreen(
                         Icon(
                             imageVector = Icons.Default.QueueMusic,
                             contentDescription = "Queue",
-                            tint = if (uiState.isQueueVisible) AccentPink else TextPrimary,
+                            tint = if (uiState.isQueueVisible) SpotifyGreen else TextPrimary,
                             modifier = Modifier.size(26.dp)
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Large Album Artwork
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(0.82f)
+                    .fillMaxWidth(0.88f)
                     .aspectRatio(1f)
-                    .shadow(24.dp, shape = RoundedCornerShape(24.dp))
-                    .clip(RoundedCornerShape(24.dp))
+                    .shadow(20.dp, shape = RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(12.dp))
                     .background(BgCardElevated)
             ) {
                 AsyncImage(
@@ -208,7 +208,7 @@ fun FullPlayerScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Title, Artist, and Favorite button
             Row(
@@ -237,7 +237,7 @@ fun FullPlayerScreen(
                     Icon(
                         imageVector = if (track.isFavorite || uiState.isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                         contentDescription = "Favorite",
-                        tint = if (track.isFavorite || uiState.isFavorite) ColorFavorite else TextSecondary,
+                        tint = if (track.isFavorite || uiState.isFavorite) SpotifyGreen else TextSecondary,
                         modifier = Modifier.size(30.dp)
                     )
                 }
@@ -250,7 +250,7 @@ fun FullPlayerScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0x33EC4899))
+                        .background(Color(0x33EF4444))
                         .padding(horizontal = 12.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -258,7 +258,7 @@ fun FullPlayerScreen(
                     Text(
                         text = state.errorMessage ?: "Playback error",
                         fontSize = 12.sp,
-                        color = AccentPink,
+                        color = Color(0xFFEF4444),
                         modifier = Modifier.weight(1f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -277,15 +277,7 @@ fun FullPlayerScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Waveform Visualizer
-            WaveformVisualizer(
-                isPlaying = state.status == PlayerStatus.PLAYING,
-                modifier = Modifier.height(28.dp)
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Seekbar
             Slider(
@@ -300,7 +292,7 @@ fun FullPlayerScreen(
                 },
                 colors = SliderDefaults.colors(
                     thumbColor = TextPrimary,
-                    activeTrackColor = AccentPurple,
+                    activeTrackColor = SpotifyGreen,
                     inactiveTrackColor = Color(0x33FFFFFF)
                 ),
                 modifier = Modifier.fillMaxWidth()
@@ -336,7 +328,7 @@ fun FullPlayerScreen(
                     Icon(
                         imageVector = Icons.Default.Shuffle,
                         contentDescription = "Shuffle",
-                        tint = if (state.isShuffleEnabled) AccentPurple else TextMuted,
+                        tint = if (state.isShuffleEnabled) SpotifyGreen else TextMuted,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -357,11 +349,11 @@ fun FullPlayerScreen(
                         modifier = Modifier
                             .size(68.dp)
                             .clip(CircleShape)
-                            .background(SonoraGradient),
+                            .background(SpotifyGreen),
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator(
-                            color = TextPrimary,
+                            color = Color.Black,
                             strokeWidth = 3.dp,
                             modifier = Modifier.size(32.dp)
                         )
@@ -372,12 +364,12 @@ fun FullPlayerScreen(
                         modifier = Modifier
                             .size(68.dp)
                             .clip(CircleShape)
-                            .background(SonoraGradient)
+                            .background(SpotifyGreen)
                     ) {
                         Icon(
                             imageVector = if (state.status == PlayerStatus.PLAYING) Icons.Default.Pause else Icons.Default.PlayArrow,
                             contentDescription = "Play/Pause",
-                            tint = TextPrimary,
+                            tint = Color.Black,
                             modifier = Modifier.size(36.dp)
                         )
                     }
@@ -402,13 +394,13 @@ fun FullPlayerScreen(
                             RepeatMode.OFF -> Icons.Default.Repeat
                         },
                         contentDescription = "Repeat",
-                        tint = if (state.repeatMode != RepeatMode.OFF) AccentPurple else TextMuted,
+                        tint = if (state.repeatMode != RepeatMode.OFF) SpotifyGreen else TextMuted,
                         modifier = Modifier.size(24.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Action Buttons: Download, Share, Open Spotify/YouTube
             Row(
@@ -416,12 +408,12 @@ fun FullPlayerScreen(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Download Button (Authorized 320kbps)
+                // Download Button
                 IconButton(onClick = { viewModel.downloadTrack(track) }) {
                     if (uiState.isDownloading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
-                            color = AccentPink,
+                            color = SpotifyGreen,
                             strokeWidth = 2.dp
                         )
                     } else {

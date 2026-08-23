@@ -89,7 +89,7 @@
     <string name="settings_reset_data_confirm">Are you sure you want to clear your local favorites and playlists?</string>
     <string name="settings_about">About SONORA LK</string>
     <string name="settings_version">Version 1.0.0 (Production Build)</string>
-    <string name="settings_developer">Developed for Sri Lankan Music Lovers</string>
+    <string name="settings_developer">Developer: kezu</string>
     <string name="settings_privacy">Privacy Policy</string>
     <string name="settings_disclaimer_title">Legal Disclaimer</string>
     <string name="settings_disclaimer_content">SONORA LK is an independent music discovery and audio playback application. It is not affiliated with, endorsed by, or sponsored by Spotify AB. Spotify and related trademarks are the property of Spotify AB.</string>

@@ -96,15 +96,15 @@ fun HomeScreen(
 
                 Box(
                     modifier = Modifier
-                        .size(42.dp)
+                        .size(44.dp)
                         .clip(CircleShape)
-                        .background(SonoraGradient),
-                    contentAlignment = Alignment.Center
+                        .background(BgCardElevated)
                 ) {
-                    Text(
-                        text = "SL",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = TextPrimary
+                    AsyncImage(
+                        model = R.drawable.app_logo,
+                        contentDescription = "Logo",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
             }
@@ -129,7 +129,7 @@ fun HomeScreen(
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Search",
-                        tint = AccentPurple
+                        tint = SpotifyGreen
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
@@ -277,13 +277,13 @@ fun HomeSquareCard(
                         .padding(6.dp)
                         .size(32.dp)
                         .clip(CircleShape)
-                        .background(SonoraGradient),
+                        .background(SpotifyGreen),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.PlayArrow,
                         contentDescription = "Play",
-                        tint = TextPrimary,
+                        tint = androidx.compose.ui.graphics.Color.Black,
                         modifier = Modifier.size(20.dp)
                     )
                 }

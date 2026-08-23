@@ -120,42 +120,17 @@ fun TrackShimmerItem() {
 
 @Composable
 fun WaveformVisualizer(isPlaying: Boolean, modifier: Modifier = Modifier) {
-    val infiniteTransition = rememberInfiniteTransition(label = "waveform")
-    val h1 by infiniteTransition.animateFloat(
-        initialValue = 8f,
-        targetValue = if (isPlaying) 28f else 8f,
-        animationSpec = infiniteRepeatable(tween(400), RepeatMode.Reverse),
-        label = "h1"
-    )
-    val h2 by infiniteTransition.animateFloat(
-        initialValue = 24f,
-        targetValue = if (isPlaying) 10f else 12f,
-        animationSpec = infiniteRepeatable(tween(350), RepeatMode.Reverse),
-        label = "h2"
-    )
-    val h3 by infiniteTransition.animateFloat(
-        initialValue = 14f,
-        targetValue = if (isPlaying) 32f else 14f,
-        animationSpec = infiniteRepeatable(tween(450), RepeatMode.Reverse),
-        label = "h3"
-    )
-    val h4 by infiniteTransition.animateFloat(
-        initialValue = 20f,
-        targetValue = if (isPlaying) 8f else 10f,
-        animationSpec = infiniteRepeatable(tween(300), RepeatMode.Reverse),
-        label = "h4"
-    )
-
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        listOf(h1, h2, h3, h4).forEach { h ->
+        val heights = if (isPlaying) listOf(18.dp, 28.dp, 14.dp, 22.dp) else listOf(8.dp, 8.dp, 8.dp, 8.dp)
+        heights.forEach { h ->
             Box(
                 modifier = Modifier
-                    .width(4.dp)
-                    .height(h.dp)
+                    .width(3.5.dp)
+                    .height(h)
                     .clip(CircleShape)
                     .background(SonoraGradient)
             )

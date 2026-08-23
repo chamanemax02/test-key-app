@@ -96,7 +96,7 @@ fun MiniPlayer(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(2.5.dp),
-                color = AccentPurple,
+                color = SpotifyGreen,
                 trackColor = Color(0x33FFFFFF)
             )
 
@@ -113,7 +113,7 @@ fun MiniPlayer(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(48.dp)
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(RoundedCornerShape(8.dp))
                         .background(BgCardElevated)
                 )
 
@@ -142,7 +142,7 @@ fun MiniPlayer(
                 if (state.status == PlayerStatus.BUFFERING) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(32.dp),
-                        color = AccentPink,
+                        color = SpotifyGreen,
                         strokeWidth = 2.5.dp
                     )
                 } else {
@@ -151,12 +151,12 @@ fun MiniPlayer(
                         modifier = Modifier
                             .size(42.dp)
                             .clip(CircleShape)
-                            .background(SonoraGradient)
+                            .background(SpotifyGreen)
                     ) {
                         Icon(
                             imageVector = if (state.status == PlayerStatus.PLAYING) Icons.Default.Pause else Icons.Default.PlayArrow,
                             contentDescription = "Play/Pause",
-                            tint = TextPrimary,
+                            tint = Color.Black,
                             modifier = Modifier.size(24.dp)
                         )
                     }

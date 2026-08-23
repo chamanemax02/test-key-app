@@ -90,7 +90,7 @@ fun SearchScreen(
                 Icon(
                     imageVector = Icons.Default.Search,
                     contentDescription = "Search",
-                    tint = AccentPurple
+                    tint = SpotifyGreen
                 )
             },
             trailingIcon = {
@@ -108,7 +108,7 @@ fun SearchScreen(
             shape = RoundedCornerShape(16.dp),
             colors = TextFieldDefaults.outlinedTextFieldColors(
                 containerColor = BgCard,
-                focusedBorderColor = AccentPurple,
+                focusedBorderColor = SpotifyGreen,
                 unfocusedBorderColor = Color.Transparent,
                 focusedTextColor = TextPrimary,
                 unfocusedTextColor = TextPrimary
@@ -131,7 +131,7 @@ fun SearchScreen(
             indicator = { tabPositions ->
                 TabRowDefaults.Indicator(
                     modifier = Modifier.tabIndicatorOffset(tabPositions[uiState.selectedTab]),
-                    color = AccentPurple,
+                    color = SpotifyGreen,
                     height = 3.dp
                 )
             }
@@ -183,7 +183,7 @@ fun SearchScreen(
                                         Icon(
                                             imageVector = Icons.Default.History,
                                             contentDescription = null,
-                                            tint = AccentPink
+                                            tint = SpotifyGreen
                                         )
                                     },
                                     colors = AssistChipDefaults.assistChipColors(containerColor = BgCard),

@@ -90,7 +90,7 @@
     <string name="settings_reset_data_confirm">ඔබේ ප්‍රියතම ගීත සහ playlists සියල්ල මකා දැමීමට ඔබට විශ්වාසද?</string>
     <string name="settings_about">SONORA LK ගැන</string>
     <string name="settings_version">Version 1.0.0 (Production Build)</string>
-    <string name="settings_developer">ශ්‍රී ලාංකීය සංගීත ලෝලීන් වෙනුවෙන් නිර්මාණය විය</string>
+    <string name="settings_developer">නිර්මාණය kezu විසිනි</string>
     <string name="settings_privacy">පෞද්ගලිකත්ව ප්‍රතිපත්තිය</string>
     <string name="settings_disclaimer_title">නීතිමය ප්‍රකාශය</string>
     <string name="settings_disclaimer_content">SONORA LK යනු ස්වාධීන සංගීත වාදන යෙදුමකි. එය Spotify ආයතනය හා සම්බන්ධ නොවේ. Spotify සහ ඒ ආශ්‍රිත සියලු වෙළඳ ලකුණු Spotify AB සමාගම සතුය.</string>

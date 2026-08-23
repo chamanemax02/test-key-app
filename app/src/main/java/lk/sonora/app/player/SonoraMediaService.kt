@@ -25,6 +25,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
+import androidx.media3.session.MediaStyleNotificationHelper
 import coil.ImageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
@@ -48,6 +49,16 @@ class SonoraMediaService : MediaSessionService() {
                 ACTION_PLAY_PAUSE -> MusicPlayerManager.togglePlayPause()
                 ACTION_NEXT -> MusicPlayerManager.skipNext()
                 ACTION_PREV -> MusicPlayerManager.skipPrevious()
+                ACTION_FAVORITE -> {
+                    val curr = MusicPlayerManager.playbackState.value.currentTrack
+                    if (curr != null) {
+                        serviceScope.launch(Dispatchers.IO) {
+                            val app = applicationContext as? lk.sonora.app.SonoraApplication
+                            app?.musicRepository?.toggleFavorite(curr)
+                            launch(Dispatchers.Main) { updateNotification() }
+                        }
+                    }
+                }
                 ACTION_STOP -> {
                     MusicPlayerManager.togglePlayPause()
                     stopForeground(STOP_FOREGROUND_REMOVE)
@@ -64,6 +75,7 @@ class SonoraMediaService : MediaSessionService() {
         const val ACTION_PLAY_PAUSE = "lk.sonora.app.ACTION_PLAY_PAUSE"
         const val ACTION_NEXT = "lk.sonora.app.ACTION_NEXT"
         const val ACTION_PREV = "lk.sonora.app.ACTION_PREV"
+        const val ACTION_FAVORITE = "lk.sonora.app.ACTION_FAVORITE"
         const val ACTION_STOP = "lk.sonora.app.ACTION_STOP"
     }
 
@@ -77,6 +89,7 @@ class SonoraMediaService : MediaSessionService() {
             addAction(ACTION_PLAY_PAUSE)
             addAction(ACTION_NEXT)
             addAction(ACTION_PREV)
+            addAction(ACTION_FAVORITE)
             addAction(ACTION_STOP)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -140,6 +153,10 @@ class SonoraMediaService : MediaSessionService() {
             override fun onPlaybackStateChanged(playbackState: Int) {
                 updateNotification()
             }
+
+            override fun onMediaItemTransition(mediaItem: androidx.media3.common.MediaItem?, reason: Int) {
+                updateNotification()
+            }
         })
 
         MusicPlayerManager.attachPlayer(player, this)
@@ -200,6 +217,9 @@ class SonoraMediaService : MediaSessionService() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
+        val favIntent = PendingIntent.getBroadcast(
+            this, 0, Intent(ACTION_FAVORITE), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
         val prevIntent = PendingIntent.getBroadcast(
             this, 1, Intent(ACTION_PREV), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
@@ -214,26 +234,41 @@ class SonoraMediaService : MediaSessionService() {
         )
 
         val title = track?.title ?: getString(R.string.app_name)
-        val artist = track?.displayArtist ?: "SONORA LK Music Player"
+        val artist = track?.displayArtist ?: "SONORA LK"
 
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(title)
             .setContentText(artist)
-            .setSubText(track?.displayAlbum ?: "SONORA LK")
+            .setSubText("SONORA LK • kezu")
             .setSmallIcon(R.drawable.ic_sonora_logo)
+            .setColor(0xFF1DB954.toInt())
+            .setColorized(true)
             .setContentIntent(contentPendingIntent)
             .setDeleteIntent(stopIntent)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setOngoing(isPlaying)
             .setOnlyAlertOnce(true)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .addAction(R.drawable.ic_default_album_art, "Previous", prevIntent)
+            .addAction(
+                if (track?.isFavorite == true) android.R.drawable.btn_star_big_on else android.R.drawable.btn_star_big_off,
+                "Favorite",
+                favIntent
+            )
+            .addAction(android.R.drawable.ic_media_previous, "Previous", prevIntent)
             .addAction(
                 if (isPlaying) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play,
                 if (isPlaying) "Pause" else "Play",
                 playPauseIntent
             )
-            .addAction(R.drawable.ic_default_album_art, "Next", nextIntent)
+            .addAction(android.R.drawable.ic_media_next, "Next", nextIntent)
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Close", stopIntent)
+
+        val session = mediaSession
+        if (session != null) {
+            val mediaStyle = MediaStyleNotificationHelper.MediaStyle(session)
+                .setShowActionsInCompactView(1, 2, 3)
+            builder.setStyle(mediaStyle)
+        }
 
         if (artwork != null) {
             builder.setLargeIcon(artwork)

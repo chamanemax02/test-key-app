@@ -13,14 +13,14 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = AccentPurple,
-    secondary = AccentPink,
-    tertiary = AccentBlue,
+    primary = SpotifyGreen,
+    secondary = SpotifyGreenLight,
+    tertiary = SpotifyGreenDark,
     background = BgPrimary,
     surface = BgSecondary,
     surfaceVariant = BgCard,
-    onPrimary = Color.White,
-    onSecondary = Color.White,
+    onPrimary = Color.Black,
+    onSecondary = Color.Black,
     onTertiary = Color.White,
     onBackground = TextPrimary,
     onSurface = TextPrimary,
@@ -29,18 +29,18 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = AccentPurple,
-    secondary = AccentPink,
-    tertiary = AccentBlue,
-    background = Color(0xFF121212), // Keep dark-biased premium look
-    surface = Color(0xFF1E1E1E),
-    surfaceVariant = Color(0xFF282828),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
+    primary = SpotifyGreen,
+    secondary = SpotifyGreenLight,
+    tertiary = SpotifyGreenDark,
+    background = Color(0xFF121212),
+    surface = Color(0xFF181818),
+    surfaceVariant = Color(0xFF242424),
+    onPrimary = Color.Black,
+    onSecondary = Color.Black,
     onTertiary = Color.White,
     onBackground = Color.White,
     onSurface = Color.White,
-    onSurfaceVariant = Color(0xFFCCCCCC),
+    onSurfaceVariant = TextSecondary,
     error = ColorError
 )
 
