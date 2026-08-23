@@ -19,7 +19,16 @@ class MusicRepository(private val db: SonoraDatabase) {
 
     suspend fun searchMusic(query: String): ApiResult<List<Track>> = withContext(Dispatchers.IO) {
         try {
-            // First attempt YouTube Music Search for real streamable audio
+            // 1. Direct YouTube InnerTube Search (Zero normal data, works 100% on YouTube packages)
+            val directItems = lk.sonora.app.data.remote.YouTubeDirectExtractor.search(query)
+            if (directItems.isNotEmpty()) {
+                val favoriteIds = db.favoriteDao().getAllFavoriteIds().toSet()
+                val tracks = directItems.map { it.copy(isFavorite = favoriteIds.contains(it.id)) }
+                db.trackDao().insertTracks(tracks.map { TrackEntity.fromTrack(it) })
+                return@withContext ApiResult.Success(tracks)
+            }
+
+            // 2. Fallback to API YouTube Search
             val ytResponse = api.searchYouTube(query = query, apiKey = apiKey)
             if (ytResponse.isSuccessful && ytResponse.body()?.status == true) {
                 val items = ytResponse.body()?.data ?: ytResponse.body()?.result.orEmpty()
@@ -34,7 +43,7 @@ class MusicRepository(private val db: SonoraDatabase) {
                 }
             }
 
-            // Fallback to Spotify Search
+            // 3. Fallback to Spotify Search
             val spResponse = api.searchSpotify(query = query, apiKey = apiKey)
             if (spResponse.isSuccessful && spResponse.body()?.status == true) {
                 val items = spResponse.body()?.result.orEmpty()
@@ -46,7 +55,7 @@ class MusicRepository(private val db: SonoraDatabase) {
                 db.trackDao().insertTracks(tracks.map { TrackEntity.fromTrack(it) })
                 ApiResult.Success(tracks)
             } else {
-                ApiResult.Error(ytResponse.body()?.detail ?: "Failed to find matching songs", ytResponse.code())
+                ApiResult.Error("No matching songs found. Please check connection.")
             }
         } catch (e: Exception) {
             ApiResult.Error(e.localizedMessage ?: "Network connection error")
@@ -60,6 +69,15 @@ class MusicRepository(private val db: SonoraDatabase) {
         }
 
         try {
+            // 1. Direct YouTube CDN stream extraction (*.googlevideo.com for YouTube package streaming)
+            val directStreamUrl = lk.sonora.app.data.remote.YouTubeDirectExtractor.extractAudioUrl(track.id)
+            if (!directStreamUrl.isNullOrBlank()) {
+                val updatedTrack = track.copy(audioUrl = directStreamUrl)
+                db.trackDao().insertTrack(TrackEntity.fromTrack(updatedTrack))
+                return@withContext ApiResult.Success(updatedTrack)
+            }
+
+            // 2. Fallback to backend API stream extractor
             val targetUrl = track.streamTargetUrl
             val response = api.getYouTubeAudioStream(url = targetUrl, apiKey = apiKey)
             if (response.isSuccessful && response.body()?.status == true) {
@@ -76,7 +94,7 @@ class MusicRepository(private val db: SonoraDatabase) {
                     ApiResult.Error("Audio stream URL not found for this track")
                 }
             } else {
-                ApiResult.Error(response.body()?.detail ?: "Unable to resolve audio stream", response.code())
+                ApiResult.Error("Unable to resolve audio stream. Please retry.", response.code())
             }
         } catch (e: Exception) {
             ApiResult.Error(e.localizedMessage ?: "Failed to resolve playback stream")
