@@ -55,19 +55,21 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     fun loadHomeContent() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
-            
-            // Search popular & trending Sinhala/English artists for discovery
-            val trendingRes = musicRepo.searchMusic("Trending Sri Lanka")
+
+            // Search popular & trending Sinhala songs for discovery
+            val trendingRes = musicRepo.searchMusic("Sinhala Songs")
             val madeForYouRes = musicRepo.searchMusic("Sinhala Acoustic Hits")
 
             val trending = if (trendingRes is ApiResult.Success) trendingRes.data else emptyList()
             val madeForYou = if (madeForYouRes is ApiResult.Success) madeForYouRes.data else emptyList()
 
+            val hasContent = trending.isNotEmpty() || madeForYou.isNotEmpty()
+
             _uiState.value = _uiState.value.copy(
                 trendingTracks = trending,
                 madeForYouTracks = madeForYou,
                 isLoading = false,
-                errorMessage = if (trending.isEmpty() && madeForYou.isEmpty() && trendingRes is ApiResult.Error) {
+                errorMessage = if (!hasContent && trendingRes is ApiResult.Error) {
                     trendingRes.message
                 } else null
             )

@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
 
-    private const val DEFAULT_BASE_URL = "https://chama-movie-api.koyeb.app/api/v1/spotify/"
+    private val DEFAULT_BASE_URL = BuildConfig.DEFAULT_API_BASE_URL
     var apiKey: String = BuildConfig.DEFAULT_API_KEY
     var customBaseUrl: String = DEFAULT_BASE_URL
 
@@ -35,8 +35,9 @@ object ApiClient {
     private var service: SonoraApiService? = null
 
     fun getService(baseUrl: String = customBaseUrl): SonoraApiService {
-        if (service == null || customBaseUrl != baseUrl) {
-            customBaseUrl = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
+        val normalizedUrl = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
+        if (service == null || customBaseUrl != normalizedUrl) {
+            customBaseUrl = normalizedUrl
             retrofit = Retrofit.Builder()
                 .baseUrl(customBaseUrl)
                 .client(okHttpClient)

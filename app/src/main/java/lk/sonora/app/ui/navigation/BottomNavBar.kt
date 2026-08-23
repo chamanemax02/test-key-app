@@ -1,6 +1,5 @@
 package lk.sonora.app.ui.navigation
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -15,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -33,7 +33,7 @@ fun BottomNavBar(navController: NavController) {
     val currentDestination = navBackStackEntry?.destination
 
     NavigationBar(
-        modifier = Modifier.height(72.dp),
+        modifier = Modifier.height(68.dp),
         containerColor = BgGlass,
         contentColor = TextPrimary
     ) {
@@ -59,7 +59,10 @@ fun RowScope.AddItem(
         label = {
             Text(
                 text = stringResource(screen.titleResId),
-                fontSize = 11.sp,
+                fontSize = 10.sp,
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis,
                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
             )
         },
@@ -67,7 +70,7 @@ fun RowScope.AddItem(
             Icon(
                 imageVector = if (selected) screen.selectedIcon else screen.unselectedIcon,
                 contentDescription = stringResource(screen.titleResId),
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(22.dp)
             )
         },
         selected = selected,
