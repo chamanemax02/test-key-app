@@ -1,6 +1,5 @@
 package lk.sonora.app.ui.components
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -23,8 +22,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Speed
-import androidx.compose.material.icons.filled.SurroundSound
-import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -151,10 +148,11 @@ fun EqualizerSheet(
             ) {
                 soundState.availablePresets.forEach { preset ->
                     val isSelected = soundState.currentPreset == preset
+                    val bgModifier = if (isSelected) Modifier.background(SonoraGradient) else Modifier.background(BgCardElevated)
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(20.dp))
-                            .background(if (isSelected) SonoraGradient else BgCardElevated)
+                            .then(bgModifier)
                             .clickable {
                                 SoundEffectManager.setPreset(preset)
                             }
@@ -296,10 +294,11 @@ fun EqualizerSheet(
             ) {
                 speedOptions.forEach { speed ->
                     val isSelected = soundState.playbackSpeed == speed
+                    val speedBgModifier = if (isSelected) Modifier.background(SonoraGradient) else Modifier.background(BgCardElevated)
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
-                            .background(if (isSelected) SonoraGradient else BgCardElevated)
+                            .then(speedBgModifier)
                             .clickable {
                                 SoundEffectManager.setPlaybackSpeed(speed)
                             }
