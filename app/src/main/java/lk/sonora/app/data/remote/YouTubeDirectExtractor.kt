@@ -18,10 +18,19 @@ object YouTubeDirectExtractor {
 
     private val httpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
-            .connectTimeout(15, TimeUnit.SECONDS)
-            .readTimeout(15, TimeUnit.SECONDS)
+            .connectTimeout(12, TimeUnit.SECONDS)
+            .readTimeout(12, TimeUnit.SECONDS)
             .retryOnConnectionFailure(true)
             .build()
+    }
+
+    private fun extractCleanVideoId(raw: String): String {
+        return when {
+            raw.contains("v=") -> raw.substringAfter("v=").substringBefore("&").substringBefore("?")
+            raw.contains("youtu.be/") -> raw.substringAfter("youtu.be/").substringBefore("?").substringBefore("&")
+            raw.contains("/embed/") -> raw.substringAfter("/embed/").substringBefore("?").substringBefore("&")
+            else -> raw.trim()
+        }
     }
 
     suspend fun search(query: String): List<Track> = withContext(Dispatchers.IO) {
@@ -105,14 +114,57 @@ object YouTubeDirectExtractor {
         tracks
     }
 
-    suspend fun extractAudioUrl(videoId: String): String? = withContext(Dispatchers.IO) {
-        val clients = listOf(
+    suspend fun extractAudioUrl(rawId: String): String? = withContext(Dispatchers.IO) {
+        val videoId = extractCleanVideoId(rawId)
+        if (videoId.isBlank()) return@withContext null
+
+        // 1. Try YouTube TVHTML5 Embedded Player Client (returns direct googlevideo.com URLs without cipher)
+        try {
+            val payload = JsonObject().apply {
+                val context = JsonObject().apply {
+                    val client = JsonObject().apply {
+                        addProperty("clientName", "TVHTML5_SIMPLY_EMBEDDED_PLAYER")
+                        addProperty("clientVersion", "2.0")
+                        addProperty("hl", "en")
+                        addProperty("gl", "LK")
+                    }
+                    add("client", client)
+                    val thirdParty = JsonObject().apply {
+                        addProperty("embedUrl", "https://www.youtube.com")
+                    }
+                    add("thirdParty", thirdParty)
+                }
+                add("context", context)
+                addProperty("videoId", videoId)
+            }
+
+            val request = Request.Builder()
+                .url("https://www.youtube.com/youtubei/v1/player?prettyPrint=false")
+                .post(payload.toString().toRequestBody(jsonMediaType))
+                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                .header("Origin", "https://www.youtube.com")
+                .header("Referer", "https://www.youtube.com/")
+                .build()
+
+            val response = httpClient.newCall(request).execute()
+            if (response.isSuccessful) {
+                val body = response.body?.string().orEmpty()
+                val json = gson.fromJson(body, JsonObject::class.java)
+                val streamUrl = parseBestAudioFormat(json)
+                if (!streamUrl.isNullOrBlank()) return@withContext streamUrl
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        // 2. Try ANDROID_TESTSUITE / IOS clients
+        val innerTubeClients = listOf(
             Triple("ANDROID_TESTSUITE", "1.9", "3"),
             Triple("IOS", "19.29.1", "5"),
             Triple("ANDROID", "19.09.37", "3")
         )
 
-        for ((clientName, clientVersion, clientHeader) in clients) {
+        for ((clientName, clientVersion, clientHeader) in innerTubeClients) {
             try {
                 val payload = JsonObject().apply {
                     val context = JsonObject().apply {
@@ -142,38 +194,47 @@ object YouTubeDirectExtractor {
                 if (response.isSuccessful) {
                     val body = response.body?.string().orEmpty()
                     val json = gson.fromJson(body, JsonObject::class.java)
-                    val streamingData = json.getAsJsonObject("streamingData")
+                    val streamUrl = parseBestAudioFormat(json)
+                    if (!streamUrl.isNullOrBlank()) return@withContext streamUrl
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
 
-                    val adaptiveFormats = streamingData?.getAsJsonArray("adaptiveFormats")
-                    if (adaptiveFormats != null && adaptiveFormats.size() > 0) {
-                        var bestAudioUrl: String? = null
-                        var highestBitrate = 0
+        // 3. Fallback: Piped & Invidious Direct Google CDN Endpoints
+        val pipedEndpoints = listOf(
+            "https://pipedapi.kavin.rocks/streams/$videoId",
+            "https://api.piped.yt/streams/$videoId",
+            "https://inv.nadeko.net/api/v1/videos/$videoId"
+        )
 
-                        for (formatElem in adaptiveFormats) {
-                            val format = formatElem.asJsonObject
-                            val mimeType = format.get("mimeType")?.asString.orEmpty()
-                            val url = format.get("url")?.asString.orEmpty()
-                            val bitrate = format.get("bitrate")?.asInt ?: 0
+        for (endpoint in pipedEndpoints) {
+            try {
+                val req = Request.Builder()
+                    .url(endpoint)
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+                    .build()
+                val resp = httpClient.newCall(req).execute()
+                if (resp.isSuccessful) {
+                    val respBody = resp.body?.string().orEmpty()
+                    val json = gson.fromJson(respBody, JsonObject::class.java)
 
-                            if (mimeType.startsWith("audio/") && url.isNotBlank()) {
-                                if (bitrate > highestBitrate) {
-                                    highestBitrate = bitrate
-                                    bestAudioUrl = url
-                                }
-                            }
-                        }
-
-                        if (!bestAudioUrl.isNullOrBlank()) {
-                            return@withContext bestAudioUrl
-                        }
+                    // Piped structure
+                    val audioStreams = json.getAsJsonArray("audioStreams")
+                    if (audioStreams != null && audioStreams.size() > 0) {
+                        val firstAudioUrl = audioStreams[0].asJsonObject.get("url")?.asString
+                        if (!firstAudioUrl.isNullOrBlank()) return@withContext firstAudioUrl
                     }
 
-                    val formats = streamingData?.getAsJsonArray("formats")
-                    if (formats != null && formats.size() > 0) {
-                        for (formatElem in formats) {
-                            val format = formatElem.asJsonObject
+                    // Invidious structure
+                    val adaptiveFormats = json.getAsJsonArray("adaptiveFormats")
+                    if (adaptiveFormats != null) {
+                        for (elem in adaptiveFormats) {
+                            val format = elem.asJsonObject
+                            val type = format.get("type")?.asString.orEmpty()
                             val url = format.get("url")?.asString.orEmpty()
-                            if (url.isNotBlank()) {
+                            if (type.startsWith("audio/") && url.isNotBlank()) {
                                 return@withContext url
                             }
                         }
@@ -183,7 +244,49 @@ object YouTubeDirectExtractor {
                 e.printStackTrace()
             }
         }
+
         null
+    }
+
+    private fun parseBestAudioFormat(json: JsonObject): String? {
+        val streamingData = json.getAsJsonObject("streamingData") ?: return null
+
+        val adaptiveFormats = streamingData.getAsJsonArray("adaptiveFormats")
+        if (adaptiveFormats != null && adaptiveFormats.size() > 0) {
+            var bestAudioUrl: String? = null
+            var highestBitrate = 0
+
+            for (formatElem in adaptiveFormats) {
+                val format = formatElem.asJsonObject
+                val mimeType = format.get("mimeType")?.asString.orEmpty()
+                val url = format.get("url")?.asString.orEmpty()
+                val bitrate = format.get("bitrate")?.asInt ?: 0
+
+                if (mimeType.startsWith("audio/") && url.isNotBlank()) {
+                    if (bitrate > highestBitrate) {
+                        highestBitrate = bitrate
+                        bestAudioUrl = url
+                    }
+                }
+            }
+
+            if (!bestAudioUrl.isNullOrBlank()) {
+                return bestAudioUrl
+            }
+        }
+
+        val formats = streamingData.getAsJsonArray("formats")
+        if (formats != null && formats.size() > 0) {
+            for (formatElem in formats) {
+                val format = formatElem.asJsonObject
+                val url = format.get("url")?.asString.orEmpty()
+                if (url.isNotBlank()) {
+                    return url
+                }
+            }
+        }
+
+        return null
     }
 
     private fun cleanTitle(raw: String): String {

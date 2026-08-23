@@ -102,7 +102,13 @@ class SonoraMediaService : MediaSessionService() {
             .setAllowCrossProtocolRedirects(true)
             .setConnectTimeoutMs(30000)
             .setReadTimeoutMs(30000)
-            .setUserAgent("Mozilla/5.0 (Linux; Android 13; Mobile) SONORA-LK/1.0")
+            .setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+            .setDefaultRequestProperties(
+                mapOf(
+                    "Origin" to "https://www.youtube.com",
+                    "Referer" to "https://www.youtube.com/"
+                )
+            )
 
         val dataSourceFactory = DefaultDataSource.Factory(this, httpDataSourceFactory)
 
