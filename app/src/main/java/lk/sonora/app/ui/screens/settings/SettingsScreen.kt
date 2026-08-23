@@ -46,13 +46,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import lk.sonora.app.R
 import lk.sonora.app.SonoraApplication
-import lk.sonora.app.theme.AccentPink
-import lk.sonora.app.theme.AccentPurple
-import lk.sonora.app.theme.BgCard
-import lk.sonora.app.theme.BgPrimary
-import lk.sonora.app.theme.ColorError
-import lk.sonora.app.theme.TextPrimary
-import lk.sonora.app.theme.TextSecondary
+import lk.sonora.app.theme.*
 import lk.sonora.app.ui.components.SectionHeader
 
 @Composable

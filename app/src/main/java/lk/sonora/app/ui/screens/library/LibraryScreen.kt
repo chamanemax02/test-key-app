@@ -57,14 +57,7 @@ import lk.sonora.app.R
 import lk.sonora.app.model.Playlist
 import lk.sonora.app.model.Track
 import lk.sonora.app.player.MusicPlayerManager
-import lk.sonora.app.theme.AccentPink
-import lk.sonora.app.theme.AccentPurple
-import lk.sonora.app.theme.BgCard
-import lk.sonora.app.theme.BgCardElevated
-import lk.sonora.app.theme.BgPrimary
-import lk.sonora.app.theme.TextMuted
-import lk.sonora.app.theme.TextPrimary
-import lk.sonora.app.theme.TextSecondary
+import lk.sonora.app.theme.*
 import lk.sonora.app.ui.components.EmptyStateView
 import lk.sonora.app.ui.components.TrackItemRow
 

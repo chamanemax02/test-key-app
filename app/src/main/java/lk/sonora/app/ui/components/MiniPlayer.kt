@@ -46,14 +46,7 @@ import coil.compose.AsyncImage
 import lk.sonora.app.R
 import lk.sonora.app.model.PlayerStatus
 import lk.sonora.app.player.MusicPlayerManager
-import lk.sonora.app.theme.AccentPink
-import lk.sonora.app.theme.AccentPurple
-import lk.sonora.app.theme.BgCardElevated
-import lk.sonora.app.theme.BgGlass
-import lk.sonora.app.theme.BgGlassBorder
-import lk.sonora.app.theme.SonoraGradient
-import lk.sonora.app.theme.TextPrimary
-import lk.sonora.app.theme.TextSecondary
+import lk.sonora.app.theme.*
 
 @Composable
 fun MiniPlayer(

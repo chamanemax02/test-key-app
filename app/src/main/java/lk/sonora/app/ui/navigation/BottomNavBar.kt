@@ -22,10 +22,7 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
-import lk.sonora.app.theme.AccentPurple
-import lk.sonora.app.theme.BgGlass
-import lk.sonora.app.theme.TextMuted
-import lk.sonora.app.theme.TextPrimary
+import lk.sonora.app.theme.*
 
 @Composable
 fun BottomNavBar(navController: NavController) {

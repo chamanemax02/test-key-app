@@ -77,16 +77,7 @@ import lk.sonora.app.model.PlayerStatus
 import lk.sonora.app.model.RepeatMode
 import lk.sonora.app.model.Track
 import lk.sonora.app.player.MusicPlayerManager
-import lk.sonora.app.theme.AccentPink
-import lk.sonora.app.theme.AccentPurple
-import lk.sonora.app.theme.BgCard
-import lk.sonora.app.theme.BgCardElevated
-import lk.sonora.app.theme.BgPrimary
-import lk.sonora.app.theme.ColorFavorite
-import lk.sonora.app.theme.SonoraGradient
-import lk.sonora.app.theme.TextMuted
-import lk.sonora.app.theme.TextPrimary
-import lk.sonora.app.theme.TextSecondary
+import lk.sonora.app.theme.*
 import lk.sonora.app.ui.components.EqualizerSheet
 import lk.sonora.app.ui.components.TrackItemRow
 import lk.sonora.app.ui.components.WaveformVisualizer

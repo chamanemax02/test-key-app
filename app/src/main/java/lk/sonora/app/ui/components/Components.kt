@@ -50,13 +50,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import lk.sonora.app.R
 import lk.sonora.app.model.Track
-import lk.sonora.app.theme.BgCard
-import lk.sonora.app.theme.BgCardElevated
-import lk.sonora.app.theme.ColorFavorite
-import lk.sonora.app.theme.SonoraGradient
-import lk.sonora.app.theme.TextMuted
-import lk.sonora.app.theme.TextPrimary
-import lk.sonora.app.theme.TextSecondary
+import lk.sonora.app.theme.*
 
 @Composable
 fun ShimmerBrush(): Brush {

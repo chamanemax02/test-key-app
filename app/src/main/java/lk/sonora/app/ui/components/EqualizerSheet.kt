@@ -43,14 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import lk.sonora.app.player.SoundEffectManager
-import lk.sonora.app.theme.AccentPink
-import lk.sonora.app.theme.AccentPurple
-import lk.sonora.app.theme.BgCard
-import lk.sonora.app.theme.BgCardElevated
-import lk.sonora.app.theme.SonoraGradient
-import lk.sonora.app.theme.TextMuted
-import lk.sonora.app.theme.TextPrimary
-import lk.sonora.app.theme.TextSecondary
+import lk.sonora.app.theme.*
 
 @Composable
 fun EqualizerSheet(
