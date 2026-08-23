@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.QueueMusic
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.RepeatOne
 import androidx.compose.material.icons.filled.Share
@@ -40,6 +41,8 @@ import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -169,12 +172,12 @@ fun FullPlayerScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
             // Large Album Artwork
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(0.85f)
+                    .fillMaxWidth(0.82f)
                     .aspectRatio(1f)
                     .shadow(24.dp, shape = RoundedCornerShape(24.dp))
                     .clip(RoundedCornerShape(24.dp))
@@ -188,7 +191,7 @@ fun FullPlayerScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Title, Artist, and Favorite button
             Row(
@@ -198,7 +201,7 @@ fun FullPlayerScreen(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = track.title,
-                        style = MaterialTheme.typography.headlineMedium.copy(fontSize = 22.sp),
+                        style = MaterialTheme.typography.headlineMedium.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold),
                         color = TextPrimary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -223,15 +226,49 @@ fun FullPlayerScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            // Error banner if playback stream encountered an error
+            if (state.status == PlayerStatus.ERROR && !state.errorMessage.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0x33EC4899))
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = state.errorMessage ?: "Playback error",
+                        fontSize = 12.sp,
+                        color = AccentPink,
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    IconButton(
+                        onClick = { MusicPlayerManager.playTrack(track) },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Retry",
+                            tint = TextPrimary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
 
             // Waveform Visualizer
             WaveformVisualizer(
                 isPlaying = state.status == PlayerStatus.PLAYING,
-                modifier = Modifier.height(30.dp)
+                modifier = Modifier.height(28.dp)
             )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // Seekbar
             Slider(
@@ -269,7 +306,7 @@ fun FullPlayerScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             // Main Playback Controls
             Row(
@@ -354,7 +391,7 @@ fun FullPlayerScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
             // Action Buttons: Download, Share, Open Spotify
             Row(
@@ -381,11 +418,12 @@ fun FullPlayerScreen(
 
                 // Share Button
                 IconButton(onClick = {
+                    val shareUrl = if (track.youtubeUrl.isNotBlank()) track.youtubeUrl else track.spotifyUrl
                     val shareIntent = Intent(Intent.ACTION_SEND).apply {
                         type = "text/plain"
                         putExtra(
                             Intent.EXTRA_TEXT,
-                            "🎵 Listen to '${track.title}' by ${track.artist} on SONORA LK!\n${track.spotifyUrl}"
+                            "🎵 Listen to '${track.title}' by ${track.artist} on SONORA LK!\n$shareUrl"
                         )
                     }
                     context.startActivity(Intent.createChooser(shareIntent, "Share Track"))
@@ -397,15 +435,16 @@ fun FullPlayerScreen(
                     )
                 }
 
-                // Open on Spotify
-                if (track.spotifyUrl.isNotBlank()) {
+                // Open in YouTube/Spotify
+                val extUrl = if (track.youtubeUrl.isNotBlank()) track.youtubeUrl else track.spotifyUrl
+                if (extUrl.isNotBlank()) {
                     IconButton(onClick = {
-                        val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(track.spotifyUrl))
+                        val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(extUrl))
                         context.startActivity(browserIntent)
                     }) {
                         Icon(
                             imageVector = Icons.Default.OpenInBrowser,
-                            contentDescription = "Open Spotify",
+                            contentDescription = "Open Stream",
                             tint = TextSecondary
                         )
                     }

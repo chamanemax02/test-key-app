@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.annotation.OptIn
-import androidx.core.content.ContextCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
@@ -20,6 +19,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import lk.sonora.app.SonoraApplication
 import lk.sonora.app.data.remote.ApiResult
 import lk.sonora.app.model.PlaybackState
@@ -52,9 +52,9 @@ object MusicPlayerManager {
         val ctx = appContext ?: return
         val intent = Intent(ctx, SonoraMediaService::class.java)
         try {
-            ContextCompat.startForegroundService(ctx, intent)
-        } catch (e: Exception) {
             ctx.startService(intent)
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
@@ -160,9 +160,23 @@ object MusicPlayerManager {
             val app = appContext as? SonoraApplication
             val repo = app?.musicRepository
             if (repo != null) {
-                when (val result = repo.resolveAudioStream(track)) {
+                val streamResult = withTimeoutOrNull(25000L) {
+                    repo.resolveAudioStream(track)
+                }
+
+                if (streamResult == null) {
+                    _playbackState.update {
+                        it.copy(
+                            status = PlayerStatus.ERROR,
+                            errorMessage = "Streaming request timed out. Please retry."
+                        )
+                    }
+                    return@launch
+                }
+
+                when (streamResult) {
                     is ApiResult.Success -> {
-                        val updatedTrack = result.data
+                        val updatedTrack = streamResult.data
                         // Update in queue
                         val q = _queue.value.toMutableList()
                         val idx = q.indexOfFirst { it.id == track.id }
@@ -180,7 +194,7 @@ object MusicPlayerManager {
                         _playbackState.update {
                             it.copy(
                                 status = PlayerStatus.ERROR,
-                                errorMessage = result.message
+                                errorMessage = streamResult.message
                             )
                         }
                     }
@@ -213,31 +227,40 @@ object MusicPlayerManager {
             return
         }
 
-        val mediaMetadata = MediaMetadata.Builder()
-            .setTitle(track.title)
-            .setArtist(track.artist)
-            .setAlbumTitle(track.album)
-            .setArtworkUri(if (track.artworkUrl.isNotBlank()) Uri.parse(track.artworkUrl) else null)
-            .build()
+        try {
+            val mediaMetadata = MediaMetadata.Builder()
+                .setTitle(track.title)
+                .setArtist(track.artist)
+                .setAlbumTitle(track.album)
+                .setArtworkUri(if (track.artworkUrl.isNotBlank()) Uri.parse(track.artworkUrl) else null)
+                .build()
 
-        val mediaItem = MediaItem.Builder()
-            .setUri(Uri.parse(url))
-            .setMediaId(track.id)
-            .setMediaMetadata(mediaMetadata)
-            .build()
+            val mediaItem = MediaItem.Builder()
+                .setUri(Uri.parse(url))
+                .setMediaId(track.id)
+                .setMediaMetadata(mediaMetadata)
+                .build()
 
-        player.setMediaItem(mediaItem)
-        player.prepare()
-        player.play()
+            player.setMediaItem(mediaItem)
+            player.prepare()
+            player.play()
 
-        _playbackState.update {
-            it.copy(
-                currentTrack = track,
-                status = PlayerStatus.PLAYING,
-                currentPositionMs = 0L,
-                durationMs = track.durationMs,
-                errorMessage = null
-            )
+            _playbackState.update {
+                it.copy(
+                    currentTrack = track,
+                    status = PlayerStatus.PLAYING,
+                    currentPositionMs = 0L,
+                    durationMs = track.durationMs,
+                    errorMessage = null
+                )
+            }
+        } catch (e: Exception) {
+            _playbackState.update {
+                it.copy(
+                    status = PlayerStatus.ERROR,
+                    errorMessage = e.localizedMessage ?: "Failed to start audio playback"
+                )
+            }
         }
     }
 

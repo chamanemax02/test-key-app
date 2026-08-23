@@ -10,7 +10,11 @@ import androidx.core.app.NotificationCompat
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import lk.sonora.app.MainActivity
@@ -30,7 +34,26 @@ class SonoraMediaService : MediaSessionService() {
         super.onCreate()
         createNotificationChannel()
 
+        val httpDataSourceFactory = DefaultHttpDataSource.Factory()
+            .setAllowCrossProtocolRedirects(true)
+            .setConnectTimeoutMs(25000)
+            .setReadTimeoutMs(30000)
+            .setUserAgent("Mozilla/5.0 (Linux; Android 13; Mobile) SONORA-LK/1.0")
+
+        val dataSourceFactory = DefaultDataSource.Factory(this, httpDataSourceFactory)
+
+        val loadControl = DefaultLoadControl.Builder()
+            .setBufferDurationsMs(
+                15000, // minBufferMs
+                50000, // maxBufferMs
+                1000,  // bufferForPlaybackMs
+                2000   // bufferForPlaybackAfterRebufferMs
+            )
+            .build()
+
         val player = ExoPlayer.Builder(this)
+            .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
+            .setLoadControl(loadControl)
             .setAudioAttributes(
                 AudioAttributes.Builder()
                     .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
