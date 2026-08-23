@@ -3,6 +3,7 @@ package lk.sonora.app.data.repository
 import android.content.ContentUris
 import android.content.Context
 import android.net.Uri
+import android.os.Build
 import android.provider.MediaStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -31,8 +32,7 @@ class LocalMusicRepository(
             MediaStore.Audio.Media.TITLE,
             MediaStore.Audio.Media.ARTIST,
             MediaStore.Audio.Media.ALBUM,
-            MediaStore.Audio.Media.DURATION,
-            MediaStore.Audio.Media.ALBUM_ID
+            MediaStore.Audio.Media.DURATION
         )
 
         val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
@@ -53,25 +53,18 @@ class LocalMusicRepository(
                 val artistCol = c.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
                 val albumCol = c.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
                 val durationCol = c.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
-                val albumIdCol = c.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
 
                 while (c.moveToNext()) {
                     val id = c.getLong(idCol)
                     val title = c.getString(titleCol) ?: "Unknown Title"
-                    val artist = c.getString(artistCol) ?: "Unknown Artist"
-                    val album = c.getString(albumCol) ?: "Local Album"
+                    val artist = c.getString(artistCol) ?: "Local Artist"
+                    val album = c.getString(albumCol) ?: "Local Music"
                     val durationMs = c.getLong(durationCol)
-                    val albumId = c.getLong(albumIdCol)
 
                     val contentUri: Uri = ContentUris.withAppendedId(
                         MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                         id
                     )
-
-                    val albumArtUri = ContentUris.withAppendedId(
-                        Uri.parse("content://media/external/audio/albumart"),
-                        albumId
-                    ).toString()
 
                     val min = (durationMs / 1000) / 60
                     val sec = (durationMs / 1000) % 60
@@ -84,7 +77,7 @@ class LocalMusicRepository(
                         album = album,
                         durationText = durationText,
                         durationMs = durationMs,
-                        artworkUrl = albumArtUri,
+                        artworkUrl = "", // Clean default placeholder ensures no ENOENT crashes
                         localUri = contentUri.toString(),
                         isLocal = true
                     )

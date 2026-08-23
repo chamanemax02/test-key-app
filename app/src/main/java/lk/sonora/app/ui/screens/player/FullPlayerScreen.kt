@@ -28,6 +28,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.Pause
@@ -41,8 +42,6 @@ import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -56,6 +55,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -68,7 +68,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -88,6 +87,7 @@ import lk.sonora.app.theme.SonoraGradient
 import lk.sonora.app.theme.TextMuted
 import lk.sonora.app.theme.TextPrimary
 import lk.sonora.app.theme.TextSecondary
+import lk.sonora.app.ui.components.EqualizerSheet
 import lk.sonora.app.ui.components.TrackItemRow
 import lk.sonora.app.ui.components.WaveformVisualizer
 
@@ -103,6 +103,7 @@ fun FullPlayerScreen(
     val context = LocalContext.current
 
     var sliderPosition by remember { mutableFloatStateOf(-1f) }
+    var isEqualizerVisible by remember { mutableStateOf(false) }
     val isDragging = sliderPosition >= 0f
 
     val displayPosition = if (isDragging) {
@@ -130,7 +131,7 @@ fun FullPlayerScreen(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Top Bar (Collapse Button + Now Playing Title + Queue Button)
+            // Top Bar (Collapse Button + Now Playing Title + Sound Equalizer + Queue Button)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -147,7 +148,10 @@ fun FullPlayerScreen(
                     )
                 }
 
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Text(
                         text = stringResource(R.string.player_now_playing).uppercase(),
                         style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 2.sp),
@@ -162,13 +166,26 @@ fun FullPlayerScreen(
                     )
                 }
 
-                IconButton(onClick = { viewModel.toggleQueueVisibility() }) {
-                    Icon(
-                        imageVector = Icons.Default.QueueMusic,
-                        contentDescription = "Queue",
-                        tint = if (uiState.isQueueVisible) AccentPink else TextPrimary,
-                        modifier = Modifier.size(28.dp)
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    // Sound Equalizer Button
+                    IconButton(onClick = { isEqualizerVisible = true }) {
+                        Icon(
+                            imageVector = Icons.Default.GraphicEq,
+                            contentDescription = "Equalizer & Sound Effects",
+                            tint = if (isEqualizerVisible) AccentPink else TextPrimary,
+                            modifier = Modifier.size(26.dp)
+                        )
+                    }
+
+                    // Queue Button
+                    IconButton(onClick = { viewModel.toggleQueueVisibility() }) {
+                        Icon(
+                            imageVector = Icons.Default.QueueMusic,
+                            contentDescription = "Queue",
+                            tint = if (uiState.isQueueVisible) AccentPink else TextPrimary,
+                            modifier = Modifier.size(26.dp)
+                        )
+                    }
                 }
             }
 
@@ -393,7 +410,7 @@ fun FullPlayerScreen(
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // Action Buttons: Download, Share, Open Spotify
+            // Action Buttons: Download, Share, Open Spotify/YouTube
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
@@ -450,6 +467,18 @@ fun FullPlayerScreen(
                     }
                 }
             }
+        }
+
+        // Equalizer & Sound Effects Sheet
+        AnimatedVisibility(
+            visible = isEqualizerVisible,
+            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+            modifier = Modifier.align(Alignment.BottomCenter)
+        ) {
+            EqualizerSheet(
+                onDismiss = { isEqualizerVisible = false }
+            )
         }
 
         // Queue Overlay Sheet

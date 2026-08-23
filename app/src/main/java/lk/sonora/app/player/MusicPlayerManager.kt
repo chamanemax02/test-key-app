@@ -61,10 +61,12 @@ object MusicPlayerManager {
     fun attachPlayer(player: ExoPlayer, serviceContext: Context) {
         exoPlayer = player
         setupPlayerListeners()
+        SoundEffectManager.attachAudioSession(player, player.audioSessionId)
     }
 
     fun detachPlayer() {
         exoPlayer = null
+        SoundEffectManager.release()
         stopPositionTracker()
     }
 
