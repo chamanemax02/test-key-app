@@ -36,6 +36,7 @@ import kotlinx.coroutines.launch
 import lk.sonora.app.MainActivity
 import lk.sonora.app.R
 import lk.sonora.app.model.Track
+import androidx.media3.session.SessionResult
 
 class SonoraMediaService : MediaSessionService() {
 
@@ -178,15 +179,15 @@ class SonoraMediaService : MediaSessionService() {
                 when (playerCommand) {
                     Player.COMMAND_SEEK_TO_NEXT, Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM -> {
                         MusicPlayerManager.skipNext()
-                        return MediaSession.Callback.RESULT_SUCCESS
+                        return SessionResult.RESULT_SUCCESS
                     }
                     Player.COMMAND_SEEK_TO_PREVIOUS, Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM -> {
                         MusicPlayerManager.skipPrevious()
-                        return MediaSession.Callback.RESULT_SUCCESS
+                        return SessionResult.RESULT_SUCCESS
                     }
                     Player.COMMAND_SET_REPEAT_MODE -> {
                         MusicPlayerManager.cycleRepeatMode()
-                        return MediaSession.Callback.RESULT_SUCCESS
+                        return SessionResult.RESULT_SUCCESS
                     }
                 }
                 return super.onPlayerCommandRequest(session, controller, playerCommand)
