@@ -140,70 +140,59 @@ object MusicPlayerManager {
     }
 
     private fun prepareAndPlayTrack(track: Track) {
-        // If streamable direct audio or local URI is already present, play directly
-        if (track.playableUrl.isNotBlank()) {
+        // If local audio file, play directly via ExoPlayer
+        if (track.isLocal || track.localUri.isNotBlank()) {
             playCurrentTrack(track)
             recordHistory(track)
             return
         }
 
-        // Show Buffering State while resolving stream URL
+        // Online YouTube Track: Play instantly via attached YouTube Audio HTML5 Bridge
         _playbackState.update {
             it.copy(
                 currentTrack = track,
                 status = PlayerStatus.BUFFERING,
                 currentPositionMs = 0L,
+                durationMs = track.durationMs,
                 errorMessage = null
             )
         }
 
-        resolveJob?.cancel()
-        resolveJob = scope.launch(Dispatchers.IO) {
-            val app = appContext as? SonoraApplication
-            val repo = app?.musicRepository
-            if (repo != null) {
-                val streamResult = withTimeoutOrNull(25000L) {
-                    repo.resolveAudioStream(track)
-                }
-
-                if (streamResult == null) {
-                    _playbackState.update {
-                        it.copy(
-                            status = PlayerStatus.ERROR,
-                            errorMessage = "Streaming request timed out. Please retry."
-                        )
-                    }
-                    return@launch
-                }
-
-                when (streamResult) {
-                    is ApiResult.Success -> {
-                        val updatedTrack = streamResult.data
-                        // Update in queue
-                        val q = _queue.value.toMutableList()
-                        val idx = q.indexOfFirst { it.id == track.id }
-                        if (idx != -1) {
-                            q[idx] = updatedTrack
-                            _queue.value = q
-                        }
-
-                        launch(Dispatchers.Main) {
-                            playCurrentTrack(updatedTrack)
-                            recordHistory(updatedTrack)
-                        }
-                    }
-                    is ApiResult.Error -> {
-                        _playbackState.update {
-                            it.copy(
-                                status = PlayerStatus.ERROR,
-                                errorMessage = streamResult.message
-                            )
-                        }
-                    }
-                    is ApiResult.Loading -> {}
-                }
-            }
+        val videoId = when {
+            track.id.contains("v=") -> track.id.substringAfter("v=").substringBefore("&").substringBefore("?")
+            track.id.contains("youtu.be/") -> track.id.substringAfter("youtu.be/").substringBefore("?").substringBefore("&")
+            track.youtubeUrl.contains("v=") -> track.youtubeUrl.substringAfter("v=").substringBefore("&").substringBefore("?")
+            track.youtubeUrl.contains("youtu.be/") -> track.youtubeUrl.substringAfter("youtu.be/").substringBefore("?").substringBefore("&")
+            else -> track.id.trim()
         }
+
+        YouTubeAudioPlayerBridge.playVideo(videoId)
+        recordHistory(track)
+    }
+
+    // Callbacks from YouTubeAudioPlayerBridge
+    fun onAudioStatusChange(status: PlayerStatus, durationMs: Long) {
+        _playbackState.update {
+            it.copy(
+                status = status,
+                durationMs = if (durationMs > 0) durationMs else it.durationMs,
+                errorMessage = null
+            )
+        }
+    }
+
+    fun onAudioProgress(curPositionMs: Long, durationMs: Long) {
+        _playbackState.update {
+            it.copy(
+                currentPositionMs = curPositionMs,
+                durationMs = if (durationMs > 0) durationMs else it.durationMs
+            )
+        }
+    }
+
+    fun onAudioEnded() {
+        _playbackState.update { it.copy(status = PlayerStatus.COMPLETED) }
+        handleTrackEnded()
     }
 
     private fun recordHistory(track: Track) {
@@ -267,6 +256,18 @@ object MusicPlayerManager {
     }
 
     fun togglePlayPause() {
+        val currentTrack = _playbackState.value.currentTrack
+        if (currentTrack != null && !currentTrack.isLocal && currentTrack.localUri.isBlank()) {
+            // Online YouTube Play/Pause
+            if (_playbackState.value.status == PlayerStatus.PLAYING) {
+                YouTubeAudioPlayerBridge.pause()
+            } else {
+                YouTubeAudioPlayerBridge.resume()
+            }
+            return
+        }
+
+        // Local Play/Pause
         val player = exoPlayer ?: return
         if (player.isPlaying) {
             player.pause()
@@ -281,6 +282,13 @@ object MusicPlayerManager {
     }
 
     fun seekTo(positionMs: Long) {
+        val currentTrack = _playbackState.value.currentTrack
+        if (currentTrack != null && !currentTrack.isLocal && currentTrack.localUri.isBlank()) {
+            YouTubeAudioPlayerBridge.seekTo(positionMs)
+            _playbackState.update { it.copy(currentPositionMs = positionMs) }
+            return
+        }
+
         exoPlayer?.seekTo(positionMs)
         _playbackState.update { it.copy(currentPositionMs = positionMs) }
     }

@@ -36,6 +36,12 @@ import lk.sonora.app.ui.navigation.NavGraph
 import lk.sonora.app.ui.screens.player.FullPlayerScreen
 import lk.sonora.app.ui.screens.player.PlayerViewModel
 
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.viewinterop.AndroidView
+import android.webkit.WebView
+import lk.sonora.app.player.YouTubeAudioPlayerBridge
+
 class MainActivity : ComponentActivity() {
 
     private val playerViewModel: PlayerViewModel by viewModels()
@@ -64,6 +70,17 @@ class MainActivity : ComponentActivity() {
                         .fillMaxSize()
                         .background(BgPrimary)
                 ) {
+                    // Invisible attached YouTube Audio HTML5 Bridge
+                    AndroidView(
+                        modifier = Modifier
+                            .size(1.dp)
+                            .alpha(0.01f),
+                        factory = { ctx ->
+                            WebView(ctx).apply {
+                                YouTubeAudioPlayerBridge.attachWebView(this)
+                            }
+                        }
+                    )
                     Scaffold(
                         bottomBar = {
                             BottomNavBar(navController = navController)
