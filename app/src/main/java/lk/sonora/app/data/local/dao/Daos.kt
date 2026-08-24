@@ -29,6 +29,9 @@ interface TrackDao {
     @Query("SELECT * FROM tracks WHERE isLocal = 1")
     fun getLocalTracks(): Flow<List<TrackEntity>>
 
+    @Query("SELECT * FROM tracks WHERE title LIKE '%' || :query || '%' OR artist LIKE '%' || :query || '%'")
+    suspend fun searchTracks(query: String): List<TrackEntity>
+
     @Query("DELETE FROM tracks WHERE isLocal = 1")
     suspend fun clearLocalTracks()
 }
