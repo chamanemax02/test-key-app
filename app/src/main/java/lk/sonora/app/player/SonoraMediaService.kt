@@ -158,14 +158,15 @@ class SonoraMediaService : MediaSessionService() {
 
             override fun onPlaybackStateChanged(playbackState: Int) {
                 updateNotification()
+                if (playbackState == Player.STATE_ENDED) {
+                    MusicPlayerManager.skipNext()
+                }
             }
 
             override fun onMediaItemTransition(mediaItem: androidx.media3.common.MediaItem?, reason: Int) {
                 updateNotification()
             }
         })
-
-        YouTubeWebStreamEngine.init(this)
 
         MusicPlayerManager.attachPlayer(player, this)
 
@@ -316,7 +317,6 @@ class SonoraMediaService : MediaSessionService() {
             e.printStackTrace()
         }
         MusicPlayerManager.detachPlayer()
-        YouTubeWebStreamEngine.release()
         mediaSession?.run {
             player.release()
             release()
