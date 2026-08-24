@@ -19,7 +19,7 @@ class MusicRepository(private val db: SonoraDatabase) {
 
     suspend fun searchMusic(query: String): ApiResult<List<Track>> = withContext(Dispatchers.IO) {
         try {
-            // 1. Direct YouTube InnerTube Search (Zero normal data, works 100% on YouTube packages)
+            // Direct YouTube InnerTube Search (Zero normal data, works 100% on YouTube packages)
             val directItems = lk.sonora.app.data.remote.YouTubeDirectExtractor.search(query)
             if (directItems.isNotEmpty()) {
                 val favoriteIds = db.favoriteDao().getAllFavoriteIds().toSet()
@@ -28,37 +28,17 @@ class MusicRepository(private val db: SonoraDatabase) {
                 return@withContext ApiResult.Success(tracks)
             }
 
-            // 2. Fallback to API YouTube Search
-            val ytResponse = api.searchYouTube(query = query, apiKey = apiKey)
-            if (ytResponse.isSuccessful && ytResponse.body()?.status == true) {
-                val items = ytResponse.body()?.data ?: ytResponse.body()?.result.orEmpty()
+            // If empty, check cached tracks matching query
+            val cached = db.trackDao().searchTracks(query)
+            if (cached.isNotEmpty()) {
                 val favoriteIds = db.favoriteDao().getAllFavoriteIds().toSet()
-                val tracks = items.map { dto ->
-                    val track = dto.toTrack()
-                    track.copy(isFavorite = favoriteIds.contains(track.id))
-                }
-                if (tracks.isNotEmpty()) {
-                    db.trackDao().insertTracks(tracks.map { TrackEntity.fromTrack(it) })
-                    return@withContext ApiResult.Success(tracks)
-                }
+                val tracks = cached.map { it.toTrack(isFav = favoriteIds.contains(it.id)) }
+                return@withContext ApiResult.Success(tracks)
             }
 
-            // 3. Fallback to Spotify Search
-            val spResponse = api.searchSpotify(query = query, apiKey = apiKey)
-            if (spResponse.isSuccessful && spResponse.body()?.status == true) {
-                val items = spResponse.body()?.result.orEmpty()
-                val favoriteIds = db.favoriteDao().getAllFavoriteIds().toSet()
-                val tracks = items.map { dto ->
-                    val track = dto.toTrack()
-                    track.copy(isFavorite = favoriteIds.contains(track.id))
-                }
-                db.trackDao().insertTracks(tracks.map { TrackEntity.fromTrack(it) })
-                ApiResult.Success(tracks)
-            } else {
-                ApiResult.Error("No matching songs found. Please check connection.")
-            }
+            ApiResult.Error("No matching songs found. Please check your connection.")
         } catch (e: Exception) {
-            ApiResult.Error(e.localizedMessage ?: "Network connection error")
+            ApiResult.Error("Network connection error. Please retry.")
         }
     }
 
@@ -69,7 +49,7 @@ class MusicRepository(private val db: SonoraDatabase) {
         }
 
         try {
-            // 1. Direct YouTube CDN stream extraction (*.googlevideo.com for YouTube package streaming)
+            // Direct YouTube CDN stream extraction (*.googlevideo.com for YouTube package streaming)
             val directStreamUrl = lk.sonora.app.data.remote.YouTubeDirectExtractor.extractAudioUrl(track.id)
             if (!directStreamUrl.isNullOrBlank()) {
                 val updatedTrack = track.copy(audioUrl = directStreamUrl)
@@ -77,27 +57,9 @@ class MusicRepository(private val db: SonoraDatabase) {
                 return@withContext ApiResult.Success(updatedTrack)
             }
 
-            // 2. Fallback to backend API stream extractor
-            val targetUrl = track.streamTargetUrl
-            val response = api.getYouTubeAudioStream(url = targetUrl, apiKey = apiKey)
-            if (response.isSuccessful && response.body()?.status == true) {
-                val data = response.body()?.data ?: response.body()?.result
-                val directUrl = data?.audioUrl
-                if (!directUrl.isNullOrBlank()) {
-                    val updatedTrack = track.copy(
-                        audioUrl = directUrl,
-                        artworkUrl = if (track.artworkUrl.isBlank()) data.thumbnail.orEmpty() else track.artworkUrl
-                    )
-                    db.trackDao().insertTrack(TrackEntity.fromTrack(updatedTrack))
-                    ApiResult.Success(updatedTrack)
-                } else {
-                    ApiResult.Error("Audio stream URL not found for this track")
-                }
-            } else {
-                ApiResult.Error("Unable to resolve audio stream. Please retry.", response.code())
-            }
+            ApiResult.Error("Unable to load audio stream. Please check connection and retry.")
         } catch (e: Exception) {
-            ApiResult.Error(e.localizedMessage ?: "Failed to resolve playback stream")
+            ApiResult.Error("Failed to connect to audio stream. Please retry.")
         }
     }
 
