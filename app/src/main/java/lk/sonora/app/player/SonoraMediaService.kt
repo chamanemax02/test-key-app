@@ -49,6 +49,7 @@ class SonoraMediaService : MediaSessionService() {
                 ACTION_PLAY_PAUSE -> MusicPlayerManager.togglePlayPause()
                 ACTION_NEXT -> MusicPlayerManager.skipNext()
                 ACTION_PREV -> MusicPlayerManager.skipPrevious()
+                ACTION_REPEAT -> MusicPlayerManager.cycleRepeatMode()
                 ACTION_FAVORITE -> {
                     val curr = MusicPlayerManager.playbackState.value.currentTrack
                     if (curr != null) {
@@ -75,6 +76,7 @@ class SonoraMediaService : MediaSessionService() {
         const val ACTION_PLAY_PAUSE = "lk.sonora.app.ACTION_PLAY_PAUSE"
         const val ACTION_NEXT = "lk.sonora.app.ACTION_NEXT"
         const val ACTION_PREV = "lk.sonora.app.ACTION_PREV"
+        const val ACTION_REPEAT = "lk.sonora.app.ACTION_REPEAT"
         const val ACTION_FAVORITE = "lk.sonora.app.ACTION_FAVORITE"
         const val ACTION_STOP = "lk.sonora.app.ACTION_STOP"
     }
@@ -89,6 +91,7 @@ class SonoraMediaService : MediaSessionService() {
             addAction(ACTION_PLAY_PAUSE)
             addAction(ACTION_NEXT)
             addAction(ACTION_PREV)
+            addAction(ACTION_REPEAT)
             addAction(ACTION_FAVORITE)
             addAction(ACTION_STOP)
         }
@@ -147,8 +150,52 @@ class SonoraMediaService : MediaSessionService() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
+        val mediaCallback = object : MediaSession.Callback {
+            override fun onConnect(
+                session: MediaSession,
+                controller: MediaSession.ControllerInfo
+            ): MediaSession.ConnectionResult {
+                val availableCommands = MediaSession.ConnectionResult.DEFAULT_PLAYER_COMMANDS.buildUpon()
+                    .add(Player.COMMAND_SEEK_TO_NEXT)
+                    .add(Player.COMMAND_SEEK_TO_PREVIOUS)
+                    .add(Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
+                    .add(Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
+                    .add(Player.COMMAND_PLAY_PAUSE)
+                    .add(Player.COMMAND_SET_REPEAT_MODE)
+                    .add(Player.COMMAND_SET_SHUFFLE_MODE)
+                    .add(Player.COMMAND_STOP)
+                    .build()
+                return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
+                    .setAvailablePlayerCommands(availableCommands)
+                    .build()
+            }
+
+            override fun onPlayerCommandRequest(
+                session: MediaSession,
+                controller: MediaSession.ControllerInfo,
+                playerCommand: Int
+            ): Int {
+                when (playerCommand) {
+                    Player.COMMAND_SEEK_TO_NEXT, Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM -> {
+                        MusicPlayerManager.skipNext()
+                        return MediaSession.Callback.RESULT_SUCCESS
+                    }
+                    Player.COMMAND_SEEK_TO_PREVIOUS, Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM -> {
+                        MusicPlayerManager.skipPrevious()
+                        return MediaSession.Callback.RESULT_SUCCESS
+                    }
+                    Player.COMMAND_SET_REPEAT_MODE -> {
+                        MusicPlayerManager.cycleRepeatMode()
+                        return MediaSession.Callback.RESULT_SUCCESS
+                    }
+                }
+                return super.onPlayerCommandRequest(session, controller, playerCommand)
+            }
+        }
+
         mediaSession = MediaSession.Builder(this, player)
             .setSessionActivity(pendingIntent)
+            .setCallback(mediaCallback)
             .build()
 
         player.addListener(object : Player.Listener {
@@ -235,24 +282,36 @@ class SonoraMediaService : MediaSessionService() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
+        val repeatIntent = PendingIntent.getBroadcast(
+            this, 0, Intent(ACTION_REPEAT), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
         val prevIntent = PendingIntent.getBroadcast(
-            this, 0, Intent(ACTION_PREV), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            this, 1, Intent(ACTION_PREV), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         val playPauseIntent = PendingIntent.getBroadcast(
-            this, 1, Intent(ACTION_PLAY_PAUSE), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            this, 2, Intent(ACTION_PLAY_PAUSE), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         val nextIntent = PendingIntent.getBroadcast(
-            this, 2, Intent(ACTION_NEXT), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            this, 3, Intent(ACTION_NEXT), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         val favIntent = PendingIntent.getBroadcast(
-            this, 3, Intent(ACTION_FAVORITE), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            this, 4, Intent(ACTION_FAVORITE), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         val stopIntent = PendingIntent.getBroadcast(
-            this, 4, Intent(ACTION_STOP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            this, 5, Intent(ACTION_STOP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
         val title = track?.cleanDisplayTitle ?: getString(R.string.app_name)
         val artist = track?.displayArtist ?: "SONORA LK"
+        val repeatMode = MusicPlayerManager.playbackState.value.repeatMode
+        val isFav = track?.isFavorite == true
+
+        val repeatIcon = when (repeatMode) {
+            lk.sonora.app.model.RepeatMode.ONE -> R.drawable.ic_repeat_one
+            else -> R.drawable.ic_repeat
+        }
+
+        val heartIcon = if (isFav) R.drawable.ic_heart_filled else R.drawable.ic_heart_outline
 
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(title)
@@ -267,6 +326,7 @@ class SonoraMediaService : MediaSessionService() {
             .setOngoing(isPlaying)
             .setOnlyAlertOnce(true)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .addAction(repeatIcon, "Repeat", repeatIntent)
             .addAction(android.R.drawable.ic_media_previous, "Previous", prevIntent)
             .addAction(
                 if (isPlaying) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play,
@@ -274,17 +334,12 @@ class SonoraMediaService : MediaSessionService() {
                 playPauseIntent
             )
             .addAction(android.R.drawable.ic_media_next, "Next", nextIntent)
-            .addAction(
-                if (track?.isFavorite == true) android.R.drawable.btn_star_big_on else android.R.drawable.btn_star_big_off,
-                "Favorite",
-                favIntent
-            )
-            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Close", stopIntent)
+            .addAction(heartIcon, "Favorite", favIntent)
 
         val session = mediaSession
         if (session != null) {
             val mediaStyle = MediaStyleNotificationHelper.MediaStyle(session)
-                .setShowActionsInCompactView(0, 1, 2)
+                .setShowActionsInCompactView(1, 2, 3)
             builder.setStyle(mediaStyle)
         }
 
