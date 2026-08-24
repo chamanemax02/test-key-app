@@ -140,69 +140,67 @@ object MusicPlayerManager {
     }
 
     private fun prepareAndPlayTrack(track: Track) {
-        // If streamable URL is already present, play directly
-        if (track.playableUrl.isNotBlank()) {
+        // If it's a local file, play directly with ExoPlayer
+        if (track.isLocal || track.localUri.isNotBlank()) {
             playCurrentTrack(track)
             recordHistory(track)
             return
         }
 
-        // Show Buffering State while resolving stream URL
+        // Online YouTube Track: Play via Direct Official YouTube Web Stream Engine
         _playbackState.update {
             it.copy(
                 currentTrack = track,
                 status = PlayerStatus.BUFFERING,
                 currentPositionMs = 0L,
+                durationMs = track.durationMs,
                 errorMessage = null
             )
         }
 
-        resolveJob?.cancel()
-        resolveJob = scope.launch(Dispatchers.IO) {
-            val app = appContext as? SonoraApplication
-            val repo = app?.musicRepository
-            if (repo != null) {
-                val streamResult = withTimeoutOrNull(25000L) {
-                    repo.resolveAudioStream(track)
-                }
+        val videoId = when {
+            track.id.contains("v=") -> track.id.substringAfter("v=").substringBefore("&").substringBefore("?")
+            track.id.contains("youtu.be/") -> track.id.substringAfter("youtu.be/").substringBefore("?").substringBefore("&")
+            track.youtubeUrl.contains("v=") -> track.youtubeUrl.substringAfter("v=").substringBefore("&").substringBefore("?")
+            track.youtubeUrl.contains("youtu.be/") -> track.youtubeUrl.substringAfter("youtu.be/").substringBefore("?").substringBefore("&")
+            else -> track.id.trim()
+        }
 
-                if (streamResult == null) {
-                    _playbackState.update {
-                        it.copy(
-                            status = PlayerStatus.ERROR,
-                            errorMessage = "Streaming request timed out. Please retry."
-                        )
-                    }
-                    return@launch
-                }
+        YouTubeWebStreamEngine.loadVideo(videoId)
+        recordHistory(track)
+    }
 
-                when (streamResult) {
-                    is ApiResult.Success -> {
-                        val updatedTrack = streamResult.data
-                        // Update in queue
-                        val q = _queue.value.toMutableList()
-                        val idx = q.indexOfFirst { it.id == track.id }
-                        if (idx != -1) {
-                            q[idx] = updatedTrack
-                            _queue.value = q
-                        }
+    // Engine Callbacks from YouTubeWebStreamEngine
+    fun onEngineStatusUpdate(status: PlayerStatus, durationMs: Long) {
+        _playbackState.update {
+            it.copy(
+                status = status,
+                durationMs = if (durationMs > 0) durationMs else it.durationMs,
+                errorMessage = null
+            )
+        }
+    }
 
-                        launch(Dispatchers.Main) {
-                            playCurrentTrack(updatedTrack)
-                            recordHistory(updatedTrack)
-                        }
-                    }
-                    is ApiResult.Error -> {
-                        _playbackState.update {
-                            it.copy(
-                                status = PlayerStatus.ERROR,
-                                errorMessage = streamResult.message
-                            )
-                        }
-                    }
-                    is ApiResult.Loading -> {}
-                }
-            }
+    fun onEnginePositionUpdate(positionMs: Long, durationMs: Long) {
+        _playbackState.update {
+            it.copy(
+                currentPositionMs = positionMs,
+                durationMs = if (durationMs > 0) durationMs else it.durationMs
+            )
+        }
+    }
+
+    fun onEngineTrackEnded() {
+        _playbackState.update { it.copy(status = PlayerStatus.COMPLETED) }
+        handleTrackEnded()
+    }
+
+    fun onEngineError(message: String) {
+        _playbackState.update {
+            it.copy(
+                status = PlayerStatus.ERROR,
+                errorMessage = message
+            )
         }
     }
 
@@ -223,7 +221,7 @@ object MusicPlayerManager {
                 it.copy(
                     currentTrack = track,
                     status = PlayerStatus.ERROR,
-                    errorMessage = "Audio playback source is unavailable."
+                    errorMessage = "Audio source is unavailable."
                 )
             }
             return
@@ -267,6 +265,20 @@ object MusicPlayerManager {
     }
 
     fun togglePlayPause() {
+        val currTrack = _playbackState.value.currentTrack
+        if (currTrack != null && !currTrack.isLocal && currTrack.localUri.isBlank()) {
+            // YouTube Web Stream Engine Toggle
+            if (_playbackState.value.status == PlayerStatus.PLAYING) {
+                YouTubeWebStreamEngine.pause()
+                _playbackState.update { it.copy(status = PlayerStatus.PAUSED) }
+            } else {
+                YouTubeWebStreamEngine.play()
+                _playbackState.update { it.copy(status = PlayerStatus.PLAYING) }
+            }
+            return
+        }
+
+        // Local ExoPlayer Toggle
         val player = exoPlayer ?: return
         if (player.isPlaying) {
             player.pause()
@@ -281,6 +293,12 @@ object MusicPlayerManager {
     }
 
     fun seekTo(positionMs: Long) {
+        val currTrack = _playbackState.value.currentTrack
+        if (currTrack != null && !currTrack.isLocal && currTrack.localUri.isBlank()) {
+            YouTubeWebStreamEngine.seekTo(positionMs)
+            _playbackState.update { it.copy(currentPositionMs = positionMs) }
+            return
+        }
         exoPlayer?.seekTo(positionMs)
         _playbackState.update { it.copy(currentPositionMs = positionMs) }
     }

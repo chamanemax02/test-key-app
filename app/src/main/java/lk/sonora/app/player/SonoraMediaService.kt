@@ -165,7 +165,16 @@ class SonoraMediaService : MediaSessionService() {
             }
         })
 
+        YouTubeWebStreamEngine.init(this)
+
         MusicPlayerManager.attachPlayer(player, this)
+
+        // Observe playback state changes for live notification updates
+        serviceScope.launch {
+            MusicPlayerManager.playbackState.collect {
+                updateNotification()
+            }
+        }
 
         // Start initial foreground notification immediately to satisfy Android OS requirements
         val initialNotif = buildNotification(null, false, null)
@@ -181,8 +190,9 @@ class SonoraMediaService : MediaSessionService() {
     }
 
     fun updateNotification() {
-        val currentTrack = MusicPlayerManager.playbackState.value.currentTrack
-        val isPlaying = exoPlayer?.isPlaying == true
+        val state = MusicPlayerManager.playbackState.value
+        val currentTrack = state.currentTrack
+        val isPlaying = state.status == lk.sonora.app.model.PlayerStatus.PLAYING || exoPlayer?.isPlaying == true
 
         if (currentTrack == null) return
 
@@ -306,6 +316,7 @@ class SonoraMediaService : MediaSessionService() {
             e.printStackTrace()
         }
         MusicPlayerManager.detachPlayer()
+        YouTubeWebStreamEngine.release()
         mediaSession?.run {
             player.release()
             release()
