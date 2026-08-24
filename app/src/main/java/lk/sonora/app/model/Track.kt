@@ -19,6 +19,20 @@ data class Track(
     val releaseDate: String = "",
     val quality: String = "320kbps"
 ) {
+    val cleanDisplayTitle: String
+        get() {
+            var t = title.trim()
+            if (t.contains(" - ")) {
+                val parts = t.split(" - ")
+                if (parts.size >= 2 && parts[1].trim().isNotBlank()) {
+                    t = parts[1].trim()
+                }
+            }
+            return t.replace(Regex("(?i)\\[official.*?\\]|\\(official.*?\\)|\\(lyrics.*?\\)|\\[lyrics.*?\\]|\\(audio\\)|\\[audio\\]|\\(video\\)|\\[video\\]|\\|.*|\\b4k\\b|\\bhd\\b|\\bmv\\b"), "")
+                .trim()
+                .ifBlank { title }
+        }
+
     val displayArtist: String
         get() = artist.ifBlank { "Unknown Artist" }
 

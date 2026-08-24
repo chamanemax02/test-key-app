@@ -204,6 +204,7 @@ class SonoraMediaService : MediaSessionService() {
                     val loader = ImageLoader(this@SonoraMediaService)
                     val req = ImageRequest.Builder(this@SonoraMediaService)
                         .data(currentTrack.artworkUrl)
+                        .size(512, 512)
                         .allowHardware(false)
                         .build()
                     val result = loader.execute(req)
@@ -234,30 +235,30 @@ class SonoraMediaService : MediaSessionService() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val favIntent = PendingIntent.getBroadcast(
-            this, 0, Intent(ACTION_FAVORITE), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
         val prevIntent = PendingIntent.getBroadcast(
-            this, 1, Intent(ACTION_PREV), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            this, 0, Intent(ACTION_PREV), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         val playPauseIntent = PendingIntent.getBroadcast(
-            this, 2, Intent(ACTION_PLAY_PAUSE), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            this, 1, Intent(ACTION_PLAY_PAUSE), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         val nextIntent = PendingIntent.getBroadcast(
-            this, 3, Intent(ACTION_NEXT), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            this, 2, Intent(ACTION_NEXT), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+        val favIntent = PendingIntent.getBroadcast(
+            this, 3, Intent(ACTION_FAVORITE), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         val stopIntent = PendingIntent.getBroadcast(
             this, 4, Intent(ACTION_STOP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val title = track?.title ?: getString(R.string.app_name)
+        val title = track?.cleanDisplayTitle ?: getString(R.string.app_name)
         val artist = track?.displayArtist ?: "SONORA LK"
 
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(title)
             .setContentText(artist)
-            .setSubText("SONORA LK • kezu")
-            .setSmallIcon(R.drawable.ic_sonora_logo)
+            .setSubText("SONORA LK")
+            .setSmallIcon(R.drawable.ic_stat_music)
             .setColor(0xFF1DB954.toInt())
             .setColorized(true)
             .setContentIntent(contentPendingIntent)
@@ -266,11 +267,6 @@ class SonoraMediaService : MediaSessionService() {
             .setOngoing(isPlaying)
             .setOnlyAlertOnce(true)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .addAction(
-                if (track?.isFavorite == true) android.R.drawable.btn_star_big_on else android.R.drawable.btn_star_big_off,
-                "Favorite",
-                favIntent
-            )
             .addAction(android.R.drawable.ic_media_previous, "Previous", prevIntent)
             .addAction(
                 if (isPlaying) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play,
@@ -278,12 +274,17 @@ class SonoraMediaService : MediaSessionService() {
                 playPauseIntent
             )
             .addAction(android.R.drawable.ic_media_next, "Next", nextIntent)
+            .addAction(
+                if (track?.isFavorite == true) android.R.drawable.btn_star_big_on else android.R.drawable.btn_star_big_off,
+                "Favorite",
+                favIntent
+            )
             .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Close", stopIntent)
 
         val session = mediaSession
         if (session != null) {
             val mediaStyle = MediaStyleNotificationHelper.MediaStyle(session)
-                .setShowActionsInCompactView(1, 2, 3)
+                .setShowActionsInCompactView(0, 1, 2)
             builder.setStyle(mediaStyle)
         }
 
